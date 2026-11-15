@@ -1,4 +1,4 @@
-import { Hourglass, ShieldCheck, Tags, type LucideIcon } from "lucide-react";
+import { CalendarDays, Hourglass, ShieldCheck, Tags, type LucideIcon } from "lucide-react";
 
 export type SettingsItem = {
   href: string;
@@ -26,5 +26,11 @@ export const settingsItems: SettingsItem[] = [
     title: "Compra consciente",
     description: "Una pausa antes de gastos grandes.",
     icon: Hourglass,
+  },
+  {
+    href: "/weekly",
+    title: "Resumen semanal",
+    description: "Cómo va tu semana.",
+    icon: CalendarDays,
   },
 ];

@@ -185,7 +185,7 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Pendiente, antes de desplegar |
 | 9 | 010a | Compras impulsivas evitadas | P1 | Hecha |
 | 10 | 010c | Compra consciente | P1 | Hecha |
-| 11 | 010b | Resumen financiero semanal | P1 | Pendiente (nuevo) |
+| 11 | 010b | Resumen financiero semanal | P1 | Hecha |
 | 12 | 011 | PWA | — | Pospuesta |
 
 Cambios respecto al v0.2: se añade 006b, que el v0.2 pide (navegación) pero no numera; las tarjetas pasan a una **versión ligera** (007a-1: sin fechas, límite ni cuotas, porque el usuario no quiere registrar ese detalle) y las cuotas (007a-2) quedan pospuestas; la spec 009a (dinero disponible) se construye **antes** que el dashboard, porque este lo muestra primero; y la compra consciente recibe el id 010c, porque el v0.2 no le asigna uno.

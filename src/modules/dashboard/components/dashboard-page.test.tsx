@@ -9,12 +9,14 @@ const bud = vi.hoisted(() => ({ listBudgetsAction: vi.fn() }));
 const tx = vi.hoisted(() => ({ listTransactionsAction: vi.fn() }));
 const quick = vi.hoisted(() => ({ open: vi.fn() }));
 const avoided = vi.hoisted(() => ({ getAvoidedOverviewAction: vi.fn() }));
+const weekly = vi.hoisted(() => ({ getWeeklySummaryAction: vi.fn() }));
 
 vi.mock("../actions/dashboard.actions", () => dash);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/budgets/actions/budgets.actions", () => bud);
 vi.mock("@/modules/transactions/actions/transactions.actions", () => tx);
 vi.mock("@/modules/avoided-purchases/actions/avoided-purchases.actions", () => avoided);
+vi.mock("@/modules/weekly-summary/actions/weekly-summary.actions", () => weekly);
 vi.mock("@/modules/quick-add/hooks/use-quick-add", () => ({ useQuickAdd: () => quick }));
 vi.mock("@/modules/quick-add/components/quick-actions", () => ({ QuickActions: () => null }));
 
@@ -94,6 +96,19 @@ function setup(
         previousMonthHasBudgets: false,
       },
     ),
+  );
+  weekly.getWeeklySummaryAction.mockResolvedValue(
+    ok({
+      from: "2026-11-09",
+      to: "2026-11-15",
+      spentCents: 0,
+      previousSpentCents: 0,
+      byCategory: [],
+      avoidedCount: 0,
+      avoidedCents: 0,
+      availableAtStartCents: 0,
+      availableNowCents: 0,
+    }),
   );
   avoided.getAvoidedOverviewAction.mockResolvedValue(
     ok({
