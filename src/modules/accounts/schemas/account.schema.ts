@@ -22,6 +22,8 @@ export const accountInputSchema = z.object({
     .int("Monto inválido")
     .min(-MAX_CENTS, "Monto fuera de rango")
     .max(MAX_CENTS, "Monto fuera de rango"),
+  // false = reserve (not counted as available money). Cards ignore it.
+  includeInAvailable: z.boolean().optional(),
 });
 
 /** Form contract: the user types the balance in PEN ("12.50"). */
@@ -36,6 +38,7 @@ export const accountFormSchema = z.object({
       (v) => v === "" || penToCents(v) !== null,
       "Ingresa un monto válido, ej. 120.50",
     ),
+  includeInAvailable: z.boolean().optional(),
 });
 
 export const accountIdSchema = z.uuid("Identificador inválido");
@@ -62,6 +65,8 @@ export function toAccountInput(values: AccountFormValues): AccountInput {
     name: values.name,
     type: values.type,
     initialBalanceCents: signedBalance(values.type, typed),
+    // A card is debt, never available money: it always counts as "included".
+    includeInAvailable: values.type === "card" ? true : values.includeInAvailable,
   };
 }
 

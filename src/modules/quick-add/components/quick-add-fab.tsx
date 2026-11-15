@@ -1,17 +1,13 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 
 import { QuickAddMenu } from "./quick-add-menu";
 
-/** "+" over the centre slot of the bottom bar. Hidden on the home screen, which has big buttons. */
+/** "+" over the centre slot of the bottom bar, on every screen of the app. */
 export function QuickAddFab() {
-  const pathname = usePathname();
-  if (pathname === "/dashboard") return null;
-
   return (
     <div className="fixed bottom-[calc(2.25rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 md:hidden">
       <QuickAddMenu

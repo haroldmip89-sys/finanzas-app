@@ -18,6 +18,7 @@ function defaultsFor(account?: Account): AccountFormValues {
     name: account?.name ?? "",
     type: account?.type ?? "cash",
     initialBalance: account ? balanceToFormValue(account.type, account.initialBalanceCents) : "",
+    includeInAvailable: account?.includeInAvailable ?? true,
   };
 }
 

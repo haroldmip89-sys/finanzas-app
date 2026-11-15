@@ -69,7 +69,7 @@ describe("toAccountInput", () => {
   it("treats an empty balance as 0", () => {
     expect(
       toAccountInput({ name: "Caja", type: "cash", initialBalance: "" }),
-    ).toEqual({ name: "Caja", type: "cash", initialBalanceCents: 0 });
+    ).toEqual({ name: "Caja", type: "cash", initialBalanceCents: 0, includeInAvailable: undefined });
   });
 
   it("converts the PEN string to cents", () => {
@@ -83,7 +83,7 @@ describe("card debt in positive", () => {
   it("stores a typed debt of a card as a negative balance", () => {
     expect(
       toAccountInput({ name: "Visa", type: "card", initialBalance: "350.50" }),
-    ).toEqual({ name: "Visa", type: "card", initialBalanceCents: -35050 });
+    ).toEqual({ name: "Visa", type: "card", initialBalanceCents: -35050, includeInAvailable: true });
   });
 
   it("keeps the sign as typed for other accounts", () => {
@@ -127,5 +127,26 @@ describe("card debt in positive", () => {
         expect(toAccountInput({ name: "X", type, initialBalance: shown }).initialBalanceCents).toBe(stored);
       }
     }
+  });
+});
+
+describe("includeInAvailable (reserve toggle)", () => {
+  it("is optional in the server contract and boolean when given", () => {
+    const base = { name: "A", type: "bank", initialBalanceCents: 0 };
+
+    expect(accountInputSchema.safeParse(base).success).toBe(true);
+    expect(accountInputSchema.safeParse({ ...base, includeInAvailable: false }).success).toBe(true);
+    expect(accountInputSchema.safeParse({ ...base, includeInAvailable: "no" }).success).toBe(false);
+  });
+
+  it("keeps the choice of a liquid account and forces cards to included", () => {
+    expect(
+      toAccountInput({ name: "Ahorro", type: "bank", initialBalance: "", includeInAvailable: false })
+        .includeInAvailable,
+    ).toBe(false);
+    expect(
+      toAccountInput({ name: "Visa", type: "card", initialBalance: "", includeInAvailable: false })
+        .includeInAvailable,
+    ).toBe(true);
   });
 });

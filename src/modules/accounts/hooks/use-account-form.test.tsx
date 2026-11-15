@@ -27,6 +27,7 @@ const existing: Account = {
   name: "BCP",
   type: "bank",
   initialBalanceCents: 15050,
+  includeInAvailable: true,
   archivedAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -62,6 +63,7 @@ describe("useAccountForm", () => {
       name: "Yape",
       type: "cash",
       initialBalanceCents: 0,
+      includeInAvailable: true,
     });
   });
 
@@ -82,6 +84,7 @@ describe("useAccountForm", () => {
       name: "Caja",
       type: "cash",
       initialBalanceCents: 1250,
+      includeInAvailable: true,
     });
     expect(onSuccess).toHaveBeenCalled();
   });
@@ -99,6 +102,7 @@ describe("useAccountForm", () => {
       name: "BCP",
       type: "bank",
       initialBalance: "150.50",
+      includeInAvailable: true,
     });
 
     await act(async () => {
@@ -109,6 +113,7 @@ describe("useAccountForm", () => {
       name: "BCP",
       type: "bank",
       initialBalanceCents: 15050,
+      includeInAvailable: true,
     });
     expect(onSuccess).toHaveBeenCalled();
   });
@@ -180,6 +185,7 @@ describe("useAccountForm", () => {
         name: "Visa",
         type: "card",
         initialBalanceCents: -35050,
+        includeInAvailable: true,
       });
     });
 

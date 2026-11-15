@@ -256,6 +256,43 @@ describe("accounts service", () => {
     });
   });
 
+  describe("include in available money", () => {
+    it("defaults to included and lists the flag", async () => {
+      await service.create(USER_A, cash);
+
+      const [row] = await service.list(USER_A);
+
+      expect(row.includeInAvailable).toBe(true);
+    });
+
+    it("saves a reserve and lets the user include it again", async () => {
+      const a = await service.create(USER_A, { ...cash, includeInAvailable: false });
+      expect(a.includeInAvailable).toBe(false);
+
+      const back = await service.update(USER_A, a.id, { ...cash, includeInAvailable: true });
+      expect(back.includeInAvailable).toBe(true);
+    });
+
+    it("keeps the flag when an update does not mention it", async () => {
+      const a = await service.create(USER_A, { ...cash, includeInAvailable: false });
+
+      const updated = await service.update(USER_A, a.id, { ...cash, name: "Reserva" });
+
+      expect(updated.includeInAvailable).toBe(false);
+    });
+
+    it("ignores the flag on cards: they always stay included", async () => {
+      const card = await service.create(USER_A, {
+        name: "Visa",
+        type: "card",
+        initialBalanceCents: -1000,
+        includeInAvailable: false,
+      });
+
+      expect(card.includeInAvailable).toBe(true);
+    });
+  });
+
   describe("isolation between users", () => {
     it("returns NOT_FOUND when touching another user's account", async () => {
       const mine = await service.create(USER_A, { ...cash, name: "Privada" });

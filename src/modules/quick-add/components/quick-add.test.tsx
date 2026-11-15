@@ -159,17 +159,17 @@ describe("quick add", () => {
   });
 
   describe("QuickAddFab", () => {
-    it("is shown on screens other than the home", () => {
+    it("is shown on the movement screens", () => {
       renderWithProviders(<QuickAddFab />);
 
       expect(screen.getByRole("button", { name: "Nuevo registro" })).toBeInTheDocument();
     });
 
-    it("is hidden on the home screen", () => {
+    it("is also shown on the home screen", () => {
       pathname.value = "/dashboard";
       renderWithProviders(<QuickAddFab />);
 
-      expect(screen.queryByRole("button", { name: "Nuevo registro" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Nuevo registro" })).toBeInTheDocument();
     });
 
     it("opens a menu with the three options and then the chosen form", async () => {

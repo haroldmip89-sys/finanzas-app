@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 import { ACCOUNT_TYPE_OPTIONS } from "../constants/account-types";
 import { useAccountForm } from "../hooks/use-account-form";
@@ -105,6 +107,28 @@ function AccountForm({ account, onClose }: AccountFormProps) {
           )}
         />
       </FormField>
+
+      {!isCard && (
+        <div className="flex items-start justify-between gap-4 rounded-2xl border border-border p-4">
+          <div className="min-w-0 space-y-1">
+            <Label htmlFor="account-include">Incluir en dinero disponible</Label>
+            <p className="text-[13px] text-muted-foreground">
+              Desactívalo para apartar este dinero: no se cuenta como disponible.
+            </p>
+          </div>
+          <Controller
+            control={form.control}
+            name="includeInAvailable"
+            render={({ field }) => (
+              <Switch
+                id="account-include"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
+          />
+        </div>
+      )}
 
       {submitError && <ErrorMessage message={submitError} />}
 

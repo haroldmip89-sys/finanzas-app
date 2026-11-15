@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   pgTable,
   text,
   timestamp,
@@ -21,6 +22,8 @@ export const accounts = pgTable(
     initialBalanceCents: bigint("initial_balance_cents", { mode: "number" })
       .notNull()
       .default(0),
+    // false = reserve: the balance is not counted as available money (spec 009a).
+    includeInAvailable: boolean("include_in_available").notNull().default(true),
     // Archive instead of deleting accounts that have transactions.
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })

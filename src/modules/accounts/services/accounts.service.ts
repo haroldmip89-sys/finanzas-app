@@ -18,6 +18,11 @@ import type { Account, AccountWithBalance } from "../types/account.types";
 const DUPLICATE_MESSAGE = "Ya tienes una cuenta con ese nombre.";
 const NOT_FOUND_MESSAGE = "La cuenta no existe.";
 
+/** Cards are debt, never a reserve: they always stay "included". */
+function normalize(data: AccountInput): AccountInput {
+  return data.type === "card" ? { ...data, includeInAvailable: true } : data;
+}
+
 export function createAccountsService(db: Database) {
   const owned = (userId: string, id: string) =>
     and(eq(accounts.userId, userId), eq(accounts.id, id));
@@ -57,7 +62,7 @@ export function createAccountsService(db: Database) {
   }
 
   async function create(userId: string, input: AccountInput): Promise<Account> {
-    const data = accountInputSchema.parse(input);
+    const data = normalize(accountInputSchema.parse(input));
     await assertNameFree(userId, data.name);
 
     try {
@@ -76,7 +81,7 @@ export function createAccountsService(db: Database) {
     id: string,
     input: AccountInput,
   ): Promise<Account> {
-    const data = accountInputSchema.parse(input);
+    const data = normalize(accountInputSchema.parse(input));
     const [current] = await db.select({ id: accounts.id }).from(accounts).where(owned(userId, id));
     if (!current) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
     await assertNameFree(userId, data.name, id);

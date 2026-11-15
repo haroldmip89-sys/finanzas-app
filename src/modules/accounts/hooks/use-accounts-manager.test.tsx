@@ -24,6 +24,7 @@ const account: AccountWithBalance = {
   name: "BCP",
   type: "bank",
   initialBalanceCents: 1000,
+  includeInAvailable: true,
   balanceCents: 1000,
   archivedAt: null,
   createdAt: new Date(),

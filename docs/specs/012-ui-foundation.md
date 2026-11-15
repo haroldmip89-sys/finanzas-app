@@ -119,5 +119,5 @@ Puntos del diseño que **todavía no existen** y quedan fuera (se implementan en
 - Archivos de shadcn editados a mano: `button`, `input`, `badge` (variantes `income`, `expense`, `debt`, `warning`, `success`, `info`), `tabs`, `dialog` (asa del sheet, sheet hasta 640 px, "Cerrar"), `select`, `dropdown-menu`, `switch`, `skeleton`, `alert`, `sonner`. La CLI no debe sobrescribirlos.
 - Nuevo: `BrandLogo`, `public/yupi-logo.png`, enlace "Saltar al contenido", `ProgressBar` con tonos `success` / `warning` / `over` (gasto en `expense`), test de tokens `src/app/globals.test.ts`.
 - Un test existente cambió de assert (progress-bar: token `bg-expense` en vez de `bg-destructive`, por el diseño) y se añadió otro de estados.
-- Navegación móvil: 5 posiciones; Presupuestos se alcanza desde Inicio (tarjeta) y el menú lateral. El botón "+" sigue oculto en Inicio (test existente), así que ahí queda libre el hueco central de la barra.
+- Navegación móvil: 5 posiciones; Presupuestos se alcanza desde Inicio (tarjeta) y el menú lateral.
 - Verificado en navegador con página temporal (borrada): 360 px y 1280 px, oscuro y claro. Sin verificar: pantallas con sesión, 768 px, bottom sheets abiertos, componentes de Clerk.

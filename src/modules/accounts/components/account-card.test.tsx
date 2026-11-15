@@ -11,6 +11,7 @@ const base: AccountWithBalance = {
   name: "BBVA",
   type: "bank",
   initialBalanceCents: 10000,
+  includeInAvailable: true,
   balanceCents: 82000,
   archivedAt: null,
   createdAt: new Date(),
