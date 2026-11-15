@@ -2,24 +2,33 @@
 
 import { createContext, useContext, useState } from "react";
 
-export type QuickAddKind = "expense" | "income" | "transfer";
+export type QuickAddKind = "expense" | "income" | "transfer" | "calibrate";
+
+export type QuickAddOptions = {
+  /** Account the dialog is about (used by "calibrate"). */
+  accountId?: string;
+};
 
 export type QuickAddApi = {
   /** Opens the dialog for that kind, replacing any other one that was open. */
-  open: (kind: QuickAddKind) => void;
+  open: (kind: QuickAddKind, options?: QuickAddOptions) => void;
   close: () => void;
 };
 
 export const QuickAddContext = createContext<QuickAddApi | null>(null);
 
+type OpenState = { kind: QuickAddKind; accountId?: string };
+
 /** State of the quick-add dialogs: at most one is open at a time. */
 export function useQuickAddState() {
-  const [kind, setKind] = useState<QuickAddKind | null>(null);
+  const [state, setState] = useState<OpenState | null>(null);
 
   return {
-    kind,
-    open: (next: QuickAddKind) => setKind(next),
-    close: () => setKind(null),
+    kind: state?.kind ?? null,
+    accountId: state?.accountId,
+    open: (kind: QuickAddKind, options?: QuickAddOptions) =>
+      setState({ kind, accountId: options?.accountId }),
+    close: () => setState(null),
   };
 }
 

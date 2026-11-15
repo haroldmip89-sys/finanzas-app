@@ -328,6 +328,101 @@ describe("transactions service", () => {
     });
   });
 
+  describe("balance adjustments", () => {
+    async function seedAdjustment(
+      userId = USER_A,
+      kind: "income" | "expense" = "income",
+    ) {
+      const [row] = await t.db
+        .insert(categories)
+        .values({
+          userId,
+          name: "Ajuste de saldo",
+          kind,
+          icon: "tag",
+          systemKey: kind === "income" ? "adjustment_income" : "adjustment_expense",
+        })
+        .returning();
+      return row;
+    }
+
+    async function insertAdjustment(
+      accountId: string,
+      category: { id: string },
+      type: "income" | "expense",
+      cents: number,
+      userId = USER_A,
+    ) {
+      const [row] = await t.client.query<{ id: string }>(
+        `INSERT INTO transactions (user_id, account_id, category_id, type, amount_cents, date)
+         VALUES ($1, $2, $3, $4, $5, '2026-11-10') RETURNING id`,
+        [userId, accountId, category.id, type, cents],
+      ).then((r) => r.rows);
+      return row.id;
+    }
+
+    it("rejects creating a transaction with a system category", async () => {
+      const { account, expenseInput } = await setup();
+      const system = await seedAdjustment(USER_A, "expense");
+
+      const error = await expectAppError(
+        service.create(USER_A, { ...expenseInput, accountId: account.id, categoryId: system.id }),
+        "VALIDATION",
+      );
+
+      expect(error.fieldErrors?.categoryId).toBeDefined();
+    });
+
+    it("excludes system categories from frequent categories", async () => {
+      await setup();
+      await seedAdjustment(USER_A, "expense");
+
+      const result = await service.frequentCategories(USER_A, "expense", 6, new Date("2026-11-15T15:00:00Z"));
+
+      expect(result.map((r) => r.name)).toEqual(["Comida"]);
+    });
+
+    it("lists adjustments marked as such but leaves them out of the totals", async () => {
+      const { account, expenseInput, incomeInput } = await setup();
+      await service.create(USER_A, { ...expenseInput, amountCents: 1000 });
+      await service.create(USER_A, { ...incomeInput, amountCents: 5000 });
+      const incomeAdj = await seedAdjustment(USER_A, "income");
+      const expenseAdj = await seedAdjustment(USER_A, "expense");
+      await insertAdjustment(account.id, incomeAdj, "income", 7000);
+      await insertAdjustment(account.id, expenseAdj, "expense", 3000);
+
+      const page = await service.list(USER_A);
+
+      expect(page.total).toBe(4);
+      expect(page.items.filter((i) => i.isAdjustment)).toHaveLength(2);
+      expect(page.items.filter((i) => !i.isAdjustment)).toHaveLength(2);
+      expect(page.totals).toEqual({ incomeCents: 5000, expenseCents: 1000 });
+    });
+
+    it("keeps the totals of a type filter free of adjustments too", async () => {
+      const { account, expenseInput } = await setup();
+      await service.create(USER_A, { ...expenseInput, amountCents: 1000 });
+      const expenseAdj = await seedAdjustment(USER_A, "expense");
+      await insertAdjustment(account.id, expenseAdj, "expense", 9000);
+
+      const page = await service.list(USER_A, { type: "expense" });
+
+      expect(page.total).toBe(2);
+      expect(page.totals.expenseCents).toBe(1000);
+    });
+
+    it("refuses to edit an adjustment and allows deleting it", async () => {
+      const { account, expenseInput } = await setup();
+      const system = await seedAdjustment(USER_A, "expense");
+      const id = await insertAdjustment(account.id, system, "expense", 2500);
+
+      await expectAppError(service.update(USER_A, id, expenseInput), "VALIDATION");
+
+      await service.remove(USER_A, id);
+      expect((await service.list(USER_A)).total).toBe(0);
+    });
+  });
+
   describe("frequentCategories", () => {
     const NOW = new Date("2026-11-15T15:00:00Z");
 

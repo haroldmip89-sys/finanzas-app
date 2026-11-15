@@ -25,6 +25,7 @@ Todas las tablas llevan `id` (uuid, default `gen_random_uuid()`), `user_id` (tex
 | `kind` | enum | `income`, `expense` |
 | `icon`, `color` | text null | presentación |
 | `archived_at` | timestamptz null | |
+| `system_key` | text null | solo categorías creadas por la app (`adjustment_income`, `adjustment_expense`); ocultas al usuario, no editables ni usables en transacciones normales; única por (`user_id`, `system_key`) |
 
 ### transactions
 | Campo | Tipo | Notas |
@@ -63,9 +64,10 @@ Restricciones: `CHECK (from_account_id <> to_account_id)`; claves foráneas comp
 ### Invariantes
 
 1. Un recurso solo se lee o escribe si su `user_id` coincide con el del usuario autenticado; también la cuenta y la categoría referenciadas por una transacción.
-2. Saldo de cuenta = `initial_balance_cents` + Σ ingresos − Σ gastos + Σ transferencias recibidas − Σ transferencias enviadas. Se calcula, no se almacena.
+2. Saldo de cuenta = `initial_balance_cents` + Σ ingresos − Σ gastos + Σ transferencias recibidas − Σ transferencias enviadas. Se calcula, no se almacena (los ajustes de saldo se incluyen por ser transacciones).
 3. `transactions.type` = `categories.kind` de su categoría.
 4. No se borra una cuenta con transacciones o transferencias, ni una categoría con transacciones: se archiva.
+5. Un ajuste de saldo es una transacción cuya categoría es de sistema (`categories.system_key`): mueve el saldo de la cuenta pero no cuenta como ingreso ni gasto en totales, presupuestos ni análisis. No se edita; se puede eliminar.
 
 ## 3. Propiedad de datos
 
@@ -85,6 +87,7 @@ src/modules/
   transactions/  -> depende de: accounts, categories, db
   budgets/       -> depende de: categories, transactions (lectura), db
   dashboard/     -> depende de: transactions, budgets, accounts (solo lectura)
+  calibration/   -> depende de: accounts (saldo), categories (categoría de sistema), transactions (ajuste), db
   settings/      -> depende de: (solo enlaces a otras páginas; sin datos propios)
   quick-add/     -> depende de: transactions, transfers, accounts, categories (solo composición de UI)
 src/db/          -> `client.ts` (Neon + Drizzle), `schema/*.table.ts` (una tabla por archivo) y `schema/enums.ts`; migraciones en `drizzle/`

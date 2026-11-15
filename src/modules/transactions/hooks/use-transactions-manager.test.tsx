@@ -30,6 +30,7 @@ const item: TransactionListItem = {
   categoryId: "11111111-1111-4111-8111-111111111111",
   categoryName: "Comida",
   categoryIcon: "utensils",
+  isAdjustment: false,
 };
 
 function pageOf(total: number, items = [item]) {

@@ -15,6 +15,8 @@ export type TransactionListItem = {
   categoryId: string;
   categoryName: string;
   categoryIcon: string | null;
+  /** True for balance adjustments (system category); not income or expense. */
+  isAdjustment: boolean;
 };
 
 export type TransactionTotals = {

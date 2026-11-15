@@ -25,6 +25,7 @@ function make(partial: Partial<Category>): Category {
     kind: "expense",
     icon: "tag",
     color: null,
+    systemKey: null,
     archivedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),

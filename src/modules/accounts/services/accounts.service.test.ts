@@ -185,6 +185,21 @@ describe("accounts service", () => {
       expect(total).toBe(12000);
     });
 
+    it("includes balance adjustments (system category transactions)", async () => {
+      const a = await service.create(USER_A, { ...cash, name: "A", initialBalanceCents: 10000 });
+      const [system] = await t.db
+        .insert(categories)
+        .values({ userId: USER_A, name: "Ajuste de saldo", kind: "income", icon: "tag", systemKey: "adjustment_income" })
+        .returning();
+      await t.db.insert(transactions).values({
+        userId: USER_A, accountId: a.id, categoryId: system.id, type: "income", amountCents: 2500, date: "2026-11-15",
+      });
+
+      const [row] = await service.list(USER_A);
+
+      expect(row.balanceCents).toBe(12500);
+    });
+
     it("never counts another user's transfers", async () => {
       const own = await service.create(USER_A, { ...cash, name: "Propia" });
       const otherFrom = await service.create(USER_B, { ...cash, name: "X" });

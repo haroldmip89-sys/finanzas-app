@@ -27,6 +27,37 @@ describe("useQuickAddState", () => {
     expect(result.current.kind).toBeNull();
   });
 
+  it("opens the calibration dialog for a given account and forgets it on close", () => {
+    const { result } = renderHook(() => useQuickAddState());
+
+    act(() => result.current.open("calibrate", { accountId: "acc-1" }));
+    expect(result.current.kind).toBe("calibrate");
+    expect(result.current.accountId).toBe("acc-1");
+
+    act(() => result.current.close());
+    expect(result.current.kind).toBeNull();
+    expect(result.current.accountId).toBeUndefined();
+  });
+
+  it("opens calibrate without an account when none is given", () => {
+    const { result } = renderHook(() => useQuickAddState());
+
+    act(() => result.current.open("calibrate"));
+
+    expect(result.current.kind).toBe("calibrate");
+    expect(result.current.accountId).toBeUndefined();
+  });
+
+  it("does not keep the previous account when another kind opens", () => {
+    const { result } = renderHook(() => useQuickAddState());
+
+    act(() => result.current.open("calibrate", { accountId: "acc-1" }));
+    act(() => result.current.open("expense"));
+
+    expect(result.current.kind).toBe("expense");
+    expect(result.current.accountId).toBeUndefined();
+  });
+
   it("keeps only one dialog open at a time", () => {
     const { result } = renderHook(() => useQuickAddState());
 

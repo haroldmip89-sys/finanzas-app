@@ -11,6 +11,7 @@ import {
 } from "@/lib/errors";
 
 import { accountInputSchema, type AccountInput } from "../schemas/account.schema";
+import { accountBalanceSql } from "./account-balance";
 import type { Account, AccountWithBalance } from "../types/account.types";
 
 const DUPLICATE_MESSAGE = "Ya tienes una cuenta con ese nombre.";
@@ -24,30 +25,8 @@ export function createAccountsService(db: Database) {
     userId: string,
     options: { includeArchived?: boolean } = {},
   ): Promise<AccountWithBalance[]> {
-    // Current balance = initial + income - expense + transfers in - transfers out,
-    // in one query for all accounts. Columns are qualified by hand: inside a
-    // subquery drizzle omits the table prefix, and an unqualified "id" would
-    // resolve to the subquery table's own id.
-    const balanceCents = sql<number>`(${accounts.initialBalanceCents}
-      + coalesce((
-          select sum(case when "transactions"."type" = 'income' then "transactions"."amount_cents" else -"transactions"."amount_cents" end)
-          from "transactions"
-          where "transactions"."account_id" = "accounts"."id" and "transactions"."user_id" = "accounts"."user_id"
-        ), 0)
-      + coalesce((
-          select sum("transfers"."amount_cents")
-          from "transfers"
-          where "transfers"."to_account_id" = "accounts"."id" and "transfers"."user_id" = "accounts"."user_id"
-        ), 0)
-      - coalesce((
-          select sum("transfers"."amount_cents")
-          from "transfers"
-          where "transfers"."from_account_id" = "accounts"."id" and "transfers"."user_id" = "accounts"."user_id"
-        ), 0)
-    )::float8`;
-
     return db
-      .select({ ...getTableColumns(accounts), balanceCents })
+      .select({ ...getTableColumns(accounts), balanceCents: accountBalanceSql })
       .from(accounts)
       .where(
         options.includeArchived

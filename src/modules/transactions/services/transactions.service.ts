@@ -57,10 +57,13 @@ export function createTransactionsService(db: Database) {
         id: categories.id,
         kind: categories.kind,
         archivedAt: categories.archivedAt,
+        systemKey: categories.systemKey,
       })
       .from(categories)
       .where(and(eq(categories.userId, userId), eq(categories.id, input.categoryId)));
-    if (!category) {
+    if (!category || category.systemKey) {
+      // System categories (balance adjustments) are not usable here; they
+      // are reported as missing so their existence is not revealed.
       errors.categoryId = "La categoría no existe.";
     } else if (category.archivedAt && current?.categoryId !== category.id) {
       errors.categoryId = "La categoría está archivada.";
@@ -90,6 +93,16 @@ export function createTransactionsService(db: Database) {
     const data = transactionInputSchema.parse(input);
     const [current] = await db.select().from(transactions).where(owned(userId, id));
     if (!current) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
+    const [currentCategory] = await db
+      .select({ systemKey: categories.systemKey })
+      .from(categories)
+      .where(eq(categories.id, current.categoryId));
+    if (currentCategory?.systemKey) {
+      throw new AppError(
+        "VALIDATION",
+        "Los ajustes de saldo no se pueden editar. Elimínalo y calibra de nuevo.",
+      );
+    }
     await assertReferences(userId, data, current);
 
     const [row] = await db
@@ -134,6 +147,7 @@ export function createTransactionsService(db: Database) {
         categoryId: transactions.categoryId,
         categoryName: categories.name,
         categoryIcon: categories.icon,
+        isAdjustment: sql<boolean>`${categories.systemKey} IS NOT NULL`,
       })
       .from(transactions)
       .innerJoin(accounts, eq(accounts.id, transactions.accountId))
@@ -146,10 +160,12 @@ export function createTransactionsService(db: Database) {
     const [aggregate] = await db
       .select({
         total: sql<number>`count(*)::int`,
-        incomeCents: sql<number>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.amountCents} else 0 end), 0)::float8`,
-        expenseCents: sql<number>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.amountCents} else 0 end), 0)::float8`,
+        // Balance adjustments are not income or expense: they are left out of the totals.
+        incomeCents: sql<number>`coalesce(sum(case when ${transactions.type} = 'income' and ${categories.systemKey} is null then ${transactions.amountCents} else 0 end), 0)::float8`,
+        expenseCents: sql<number>`coalesce(sum(case when ${transactions.type} = 'expense' and ${categories.systemKey} is null then ${transactions.amountCents} else 0 end), 0)::float8`,
       })
       .from(transactions)
+      .innerJoin(categories, eq(categories.id, transactions.categoryId))
       .where(where);
 
     return {
@@ -198,6 +214,7 @@ export function createTransactionsService(db: Database) {
           eq(categories.userId, userId),
           eq(categories.kind, type),
           isNull(categories.archivedAt),
+          isNull(categories.systemKey),
         ),
       )
       .groupBy(categories.id)

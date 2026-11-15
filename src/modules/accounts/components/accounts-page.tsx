@@ -11,12 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 
+import { useQuickAdd } from "@/modules/quick-add/hooks/use-quick-add";
+
 import { useAccountsManager } from "../hooks/use-accounts-manager";
 import { AccountCard } from "./account-card";
 import { AccountFormDialog } from "./account-form-dialog";
 
 export function AccountsPage() {
   const m = useAccountsManager();
+  const quickAdd = useQuickAdd();
 
   const createButton = (
     <Button onClick={m.openCreate} className="min-h-11 w-full sm:min-h-8 sm:w-auto">
@@ -66,6 +69,7 @@ export function AccountsPage() {
               key={account.id}
               account={account}
               onEdit={m.openEdit}
+              onCalibrate={(a) => quickAdd.open("calibrate", { accountId: a.id })}
               onToggleArchived={m.toggleArchived}
               onDelete={m.askDelete}
             />

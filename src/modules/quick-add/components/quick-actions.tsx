@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, CircleMinus, CirclePlus } from "lucide-react";
+import { ArrowLeftRight, CircleMinus, CirclePlus, Scale } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,7 @@ const ACTIONS = [
   { kind: "expense", label: "Nuevo gasto", icon: CircleMinus },
   { kind: "income", label: "Nuevo ingreso", icon: CirclePlus },
   { kind: "transfer", label: "Transferir", icon: ArrowLeftRight },
+  { kind: "calibrate", label: "Calibrar saldos", icon: Scale },
 ] satisfies { kind: QuickAddKind; label: string; icon: typeof CircleMinus }[];
 
 /** Big one-tap buttons for the home screen. */
@@ -17,7 +18,7 @@ export function QuickActions() {
   const { open } = useQuickAdd();
 
   return (
-    <section aria-label="Acciones rápidas" className="grid gap-3 sm:grid-cols-3">
+    <section aria-label="Acciones rápidas" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {ACTIONS.map(({ kind, label, icon: Icon }) => (
         <Button
           key={kind}

@@ -41,4 +41,13 @@ describe("migrations", () => {
       "category_kind",
     ]);
   });
+
+  it("add the system_key column to categories", async () => {
+    const { rows } = await testDb.client.query<{ column_name: string; is_nullable: string }>(
+      `SELECT column_name, is_nullable FROM information_schema.columns
+       WHERE table_name = 'categories' AND column_name = 'system_key'`,
+    );
+
+    expect(rows).toEqual([{ column_name: "system_key", is_nullable: "YES" }]);
+  });
 });

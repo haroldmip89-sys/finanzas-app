@@ -25,6 +25,9 @@ const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const cat = vi.hoisted(() => ({ listCategoriesAction: vi.fn() }));
 
 vi.mock("@/modules/transactions/actions/transactions.actions", () => tx);
+vi.mock("@/modules/calibration/actions/calibration.actions", () => ({
+  calibrateAccountAction: vi.fn(),
+}));
 vi.mock("@/modules/transfers/actions/transfers.actions", () => tr);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/categories/actions/categories.actions", () => cat);
@@ -66,12 +69,13 @@ describe("quick add", () => {
   });
 
   describe("QuickActions (home buttons)", () => {
-    it("shows the three actions", () => {
+    it("shows the four actions", () => {
       renderWithProviders(<QuickActions />);
 
       expect(screen.getByRole("button", { name: /Nuevo gasto/ })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Nuevo ingreso/ })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Transferir/ })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Calibrar saldos/ })).toBeInTheDocument();
     });
 
     it("opens the expense form with the expense type selected", async () => {
@@ -101,6 +105,17 @@ describe("quick add", () => {
       await user.click(screen.getByRole("button", { name: /Transferir/ }));
 
       expect(await screen.findByRole("heading", { name: "Nueva transferencia" })).toBeInTheDocument();
+    });
+
+    it("opens the balance calibration dialog with an account selector", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<QuickActions />);
+
+      await user.click(screen.getByRole("button", { name: /Calibrar saldos/ }));
+
+      expect(await screen.findByRole("heading", { name: "Calibrar saldo" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Saldo real (S/)")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Calibrar" })).toBeDisabled();
     });
 
     it("shows the most used categories as one-tap buttons and the 'Más' button", async () => {

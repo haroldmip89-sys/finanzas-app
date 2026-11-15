@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 
 import { db as defaultDb } from "@/db/client";
 import { categories } from "@/db/schema";
@@ -22,8 +22,9 @@ import type { Category } from "../types/category.types";
 const DUPLICATE_MESSAGE = "Ya tienes una categoría con ese nombre.";
 
 export function createCategoriesService(db: Database) {
+  // System categories (e.g. balance adjustments) are never reachable here.
   const owned = (userId: string, id: string) =>
-    and(eq(categories.userId, userId), eq(categories.id, id));
+    and(eq(categories.userId, userId), eq(categories.id, id), isNull(categories.systemKey));
 
   /**
    * Seeds the default categories only when the user has none at all
@@ -34,7 +35,7 @@ export function createCategoriesService(db: Database) {
     const [{ count }] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(categories)
-      .where(eq(categories.userId, userId));
+      .where(and(eq(categories.userId, userId), isNull(categories.systemKey)));
     if (count > 0) return false;
 
     await db
@@ -55,8 +56,12 @@ export function createCategoriesService(db: Database) {
       .from(categories)
       .where(
         options.includeArchived
-          ? eq(categories.userId, userId)
-          : and(eq(categories.userId, userId), sql`${categories.archivedAt} IS NULL`),
+          ? and(eq(categories.userId, userId), isNull(categories.systemKey))
+          : and(
+              eq(categories.userId, userId),
+              isNull(categories.systemKey),
+              sql`${categories.archivedAt} IS NULL`,
+            ),
       )
       .orderBy(
         sql`(${categories.archivedAt} IS NOT NULL)`,

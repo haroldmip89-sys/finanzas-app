@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { accounts, categories, transactions } from "@/db/schema";
@@ -241,6 +242,57 @@ describe("categories service", () => {
 
       const error = await expectAppError(service.remove(USER_A, c.id), "IN_USE");
       expect(error.message).toMatch(/Archívala/);
+    });
+  });
+
+  describe("system categories", () => {
+    async function seedSystem(userId = USER_A) {
+      const [row] = await t.db
+        .insert(categories)
+        .values({
+          userId,
+          name: "Ajuste de saldo",
+          kind: "income",
+          icon: "tag",
+          systemKey: "adjustment_income",
+        })
+        .returning();
+      return row;
+    }
+
+    it("hides system categories from list, with and without archived", async () => {
+      await seedSystem();
+      await service.create(USER_A, { name: "Normal", kind: "expense", icon: "tag" });
+
+      const normal = await service.list(USER_A);
+      const all = await service.list(USER_A, { includeArchived: true });
+
+      expect(normal.some((c) => c.systemKey !== null)).toBe(false);
+      expect(all.some((c) => c.systemKey !== null)).toBe(false);
+      expect(normal.map((c) => c.name)).toContain("Normal");
+    });
+
+    it("returns NOT_FOUND when updating, archiving or deleting a system category", async () => {
+      const system = await seedSystem();
+
+      await expectAppError(
+        service.update(USER_A, system.id, { name: "Hackeada", icon: "tag" }),
+        "NOT_FOUND",
+      );
+      await expectAppError(service.archive(USER_A, system.id), "NOT_FOUND");
+      await expectAppError(service.unarchive(USER_A, system.id), "NOT_FOUND");
+      await expectAppError(service.remove(USER_A, system.id), "NOT_FOUND");
+
+      const [still] = await t.db.select().from(categories).where(eq(categories.id, system.id));
+      expect(still).toMatchObject({ name: "Ajuste de saldo", archivedAt: null });
+    });
+
+    it("still seeds the default categories when only system categories exist", async () => {
+      await seedSystem();
+
+      const list = await service.list(USER_A);
+
+      expect(list).toHaveLength(DEFAULT_CATEGORIES.length);
     });
   });
 });

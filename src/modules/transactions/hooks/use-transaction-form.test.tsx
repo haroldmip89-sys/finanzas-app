@@ -50,6 +50,7 @@ const existing: TransactionListItem = {
   categoryId: FOOD_ID,
   categoryName: "Comida",
   categoryIcon: "utensils",
+  isAdjustment: false,
 };
 
 describe("useTransactionForm", () => {

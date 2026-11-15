@@ -328,6 +328,59 @@ describe("schema constraints", () => {
     });
   });
 
+  describe("system categories", () => {
+    const base = { name: "Ajuste de saldo", icon: "tag" };
+
+    it("accepts a system key that matches the kind", async () => {
+      await expect(
+        t.db.insert(categories).values({ ...base, userId: USER_A, kind: "income", systemKey: "adjustment_income" }),
+      ).resolves.toBeDefined();
+      await expect(
+        t.db.insert(categories).values({ ...base, userId: USER_A, kind: "expense", systemKey: "adjustment_expense" }),
+      ).resolves.toBeDefined();
+    });
+
+    it("rejects a system key that does not match the kind", async () => {
+      await expectConstraint(
+        t.db.insert(categories).values({ ...base, userId: USER_A, kind: "expense", systemKey: "adjustment_income" }),
+        "categories_system_key_valid",
+      );
+      await expectConstraint(
+        t.db.insert(categories).values({ ...base, userId: USER_A, kind: "income", systemKey: "adjustment_expense" }),
+        "categories_system_key_valid",
+      );
+    });
+
+    it("rejects an unknown system key", async () => {
+      await expectConstraint(
+        t.db.insert(categories).values({ ...base, userId: USER_A, kind: "income", systemKey: "whatever" }),
+        "categories_system_key_valid",
+      );
+    });
+
+    it("rejects a second system category with the same key for the same user", async () => {
+      await t.db.insert(categories).values({ ...base, userId: USER_A, kind: "income", systemKey: "adjustment_income" });
+
+      await expectConstraint(
+        t.db.insert(categories).values({ name: "Otro nombre", icon: "tag", userId: USER_A, kind: "income", systemKey: "adjustment_income" }),
+        "categories_user_system_key_unique",
+      );
+    });
+
+    it("allows the same system key for different users", async () => {
+      await t.db.insert(categories).values({ ...base, userId: USER_A, kind: "income", systemKey: "adjustment_income" });
+
+      await expect(
+        t.db.insert(categories).values({ ...base, userId: USER_B, kind: "income", systemKey: "adjustment_income" }),
+      ).resolves.toBeDefined();
+    });
+
+    it("allows many normal categories (null system key) per user", async () => {
+      await seedCategory(USER_A, "expense", "Uno");
+      await expect(seedCategory(USER_A, "expense", "Dos")).resolves.toBeDefined();
+    });
+  });
+
   describe("uniqueness", () => {
     it("rejects a duplicate account name for the same user", async () => {
       await seedAccount(USER_A, "Efectivo");

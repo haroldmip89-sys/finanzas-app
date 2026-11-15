@@ -8,6 +8,7 @@ import type { AccountWithBalance } from "../types/account.types";
 type AccountCardProps = {
   account: AccountWithBalance;
   onEdit: (account: AccountWithBalance) => void;
+  onCalibrate: (account: AccountWithBalance) => void;
   onToggleArchived: (account: AccountWithBalance) => void;
   onDelete: (account: AccountWithBalance) => void;
 };
@@ -15,6 +16,7 @@ type AccountCardProps = {
 export function AccountCard({
   account,
   onEdit,
+  onCalibrate,
   onToggleArchived,
   onDelete,
 }: AccountCardProps) {
@@ -23,6 +25,8 @@ export function AccountCard({
 
   const actions: ResourceAction[] = [
     { label: "Editar", onSelect: () => onEdit(account) },
+    // An archived account cannot be calibrated.
+    ...(archived ? [] : [{ label: "Calibrar saldo", onSelect: () => onCalibrate(account) }]),
     {
       label: archived ? "Desarchivar" : "Archivar",
       onSelect: () => onToggleArchived(account),

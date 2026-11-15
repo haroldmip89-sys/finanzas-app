@@ -21,6 +21,9 @@ export function TransactionsSummary({ totals }: { totals: TransactionTotals }) {
       <SummaryItem label="Ingresos" value={formatPen(totals.incomeCents)} />
       <SummaryItem label="Gastos" value={formatPen(totals.expenseCents)} />
       <SummaryItem label="Balance" value={formatPen(balance)} />
+      <p className="text-xs text-muted-foreground sm:col-span-3">
+        Los ajustes de saldo no se cuentan en estos totales.
+      </p>
     </section>
   );
 }
