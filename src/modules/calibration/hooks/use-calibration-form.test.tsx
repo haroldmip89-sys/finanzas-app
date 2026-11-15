@@ -18,7 +18,10 @@ import { useCalibrationForm } from "./use-calibration-form";
 const BBVA = "3f1c2b4a-1b2c-4d5e-8f90-1234567890ab";
 const YAPE = "44444444-4444-4444-8444-444444444444";
 
+const VISA = "55555555-5555-4555-8555-555555555555";
+
 const accounts = [
+  { id: VISA, name: "Visa", type: "card", archivedAt: null, initialBalanceCents: 0, balanceCents: -35000 },
   { id: BBVA, name: "BBVA", type: "bank", archivedAt: null, initialBalanceCents: 0, balanceCents: 82000 },
   { id: YAPE, name: "Yape", type: "wallet", archivedAt: null, initialBalanceCents: 0, balanceCents: 1500 },
 ];
@@ -55,7 +58,7 @@ describe("useCalibrationForm", () => {
   });
 
   it("preselects the only account", async () => {
-    acc.listAccountsAction.mockResolvedValue({ ok: true, data: [accounts[0]] });
+    acc.listAccountsAction.mockResolvedValue({ ok: true, data: accounts.filter((a) => a.id === BBVA) });
     const { result } = renderHook(() => useCalibrationForm({ onSuccess: vi.fn() }), { wrapper });
 
     await waitFor(() => expect(result.current.form.getValues("accountId")).toBe(BBVA));
@@ -181,5 +184,48 @@ describe("useCalibrationForm", () => {
     });
 
     await waitFor(() => expect(result.current.submitError).toBe("Ocurrió un error inesperado."));
+  });
+
+  describe("credit cards (debt typed in positive)", () => {
+    it("marks a card and previews in terms of debt", async () => {
+      const { result } = renderHook(() => useCalibrationForm({ accountId: VISA, onSuccess: vi.fn() }), { wrapper });
+      await waitFor(() => expect(result.current.currentBalanceCents).toBe(-35000));
+
+      expect(result.current.isCard).toBe(true);
+
+      act(() => result.current.form.setValue("realBalance", "300"));
+      expect(result.current.preview).toEqual({ kind: "income", amountCents: 5000 });
+
+      act(() => result.current.form.setValue("realBalance", "400"));
+      expect(result.current.preview).toEqual({ kind: "expense", amountCents: 5000 });
+
+      act(() => result.current.form.setValue("realBalance", "350"));
+      expect(result.current.preview).toEqual({ kind: "same" });
+      expect(result.current.canSubmit).toBe(false);
+    });
+
+    it("sends the debt as a negative balance and toasts about the debt", async () => {
+      cal.calibrateAccountAction.mockResolvedValue({
+        ok: true,
+        data: { transactionId: "t", accountName: "Visa", previousBalanceCents: -35000, newBalanceCents: -30000, differenceCents: 5000 },
+      });
+      const { result } = renderHook(() => useCalibrationForm({ accountId: VISA, onSuccess: vi.fn() }), { wrapper });
+      await waitFor(() => expect(result.current.currentBalanceCents).toBe(-35000));
+
+      act(() => result.current.form.setValue("realBalance", "300"));
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(cal.calibrateAccountAction).toHaveBeenCalledWith({ accountId: VISA, realBalanceCents: -30000 });
+      expect(toastMock.success).toHaveBeenCalledWith(expect.stringMatching(/Deuda calibrada · Visa: S\/\s300\.00/));
+    });
+
+    it("does not treat a bank account as a card", async () => {
+      const { result } = renderHook(() => useCalibrationForm({ accountId: BBVA, onSuccess: vi.fn() }), { wrapper });
+      await waitFor(() => expect(result.current.currentBalanceCents).toBe(82000));
+
+      expect(result.current.isCard).toBe(false);
+    });
   });
 });

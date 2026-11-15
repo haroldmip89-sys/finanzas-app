@@ -14,8 +14,10 @@ import { Switch } from "@/components/ui/switch";
 import { useQuickAdd } from "@/modules/quick-add/hooks/use-quick-add";
 
 import { useAccountsManager } from "../hooks/use-accounts-manager";
+import type { AccountWithBalance } from "../types/account.types";
 import { AccountCard } from "./account-card";
 import { AccountFormDialog } from "./account-form-dialog";
+import { AccountsSummary } from "./accounts-summary";
 
 export function AccountsPage() {
   const m = useAccountsManager();
@@ -26,6 +28,18 @@ export function AccountsPage() {
       <Plus data-icon="inline-start" />
       Nueva cuenta
     </Button>
+  );
+
+  const renderCard = (account: AccountWithBalance) => (
+    <AccountCard
+      key={account.id}
+      account={account}
+      onEdit={m.openEdit}
+      onCalibrate={(a) => quickAdd.open("calibrate", { accountId: a.id })}
+      onPay={(a) => quickAdd.open("pay-card", { accountId: a.id })}
+      onToggleArchived={m.toggleArchived}
+      onDelete={m.askDelete}
+    />
   );
 
   return (
@@ -63,18 +77,36 @@ export function AccountsPage() {
           action={createButton}
         />
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {m.accounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              onEdit={m.openEdit}
-              onCalibrate={(a) => quickAdd.open("calibrate", { accountId: a.id })}
-              onToggleArchived={m.toggleArchived}
-              onDelete={m.askDelete}
-            />
-          ))}
-        </ul>
+        <div className="space-y-6">
+          <AccountsSummary
+            liquidCents={m.liquidCents}
+            debtCents={m.debtCents}
+            hasCards={m.hasActiveCards}
+            cardSpending={m.cardSpending}
+          />
+
+          {m.regularAccounts.length > 0 && (
+            <section aria-labelledby="accounts-heading" className="space-y-3">
+              <h2 id="accounts-heading" className="text-lg font-semibold">
+                Cuentas
+              </h2>
+              <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {m.regularAccounts.map((account) => renderCard(account))}
+              </ul>
+            </section>
+          )}
+
+          {m.cardAccounts.length > 0 && (
+            <section aria-labelledby="cards-heading" className="space-y-3">
+              <h2 id="cards-heading" className="text-lg font-semibold">
+                Tarjetas de crédito
+              </h2>
+              <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {m.cardAccounts.map((account) => renderCard(account))}
+              </ul>
+            </section>
+          )}
+        </div>
       )}
 
       <AccountFormDialog

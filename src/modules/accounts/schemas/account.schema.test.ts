@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   accountFormSchema,
   accountInputSchema,
+  balanceToFormValue,
   toAccountInput,
 } from "./account.schema";
 
@@ -75,5 +76,56 @@ describe("toAccountInput", () => {
     expect(
       toAccountInput({ name: "Caja", type: "cash", initialBalance: "12.50" }),
     ).toEqual({ name: "Caja", type: "cash", initialBalanceCents: 1250 });
+  });
+});
+
+describe("card debt in positive", () => {
+  it("stores a typed debt of a card as a negative balance", () => {
+    expect(
+      toAccountInput({ name: "Visa", type: "card", initialBalance: "350.50" }),
+    ).toEqual({ name: "Visa", type: "card", initialBalanceCents: -35050 });
+  });
+
+  it("keeps the sign as typed for other accounts", () => {
+    expect(
+      toAccountInput({ name: "BBVA", type: "bank", initialBalance: "350.50" }).initialBalanceCents,
+    ).toBe(35050);
+    expect(
+      toAccountInput({ name: "BBVA", type: "bank", initialBalance: "-20" }).initialBalanceCents,
+    ).toBe(-2000);
+  });
+
+  it("treats an empty debt and a zero debt as 0 without a negative zero", () => {
+    for (const initialBalance of ["", "0", "0.00"]) {
+      const cents = toAccountInput({ name: "Visa", type: "card", initialBalance }).initialBalanceCents;
+      expect(cents).toBe(0);
+      expect(Object.is(cents, -0)).toBe(false);
+    }
+  });
+
+  it("a negative typed value on a card means credit in favor (positive balance)", () => {
+    expect(
+      toAccountInput({ name: "Visa", type: "card", initialBalance: "-50" }).initialBalanceCents,
+    ).toBe(5000);
+  });
+
+  it("shows a card's stored negative balance as a positive debt in the form", () => {
+    expect(balanceToFormValue("card", -35050)).toBe("350.50");
+    expect(balanceToFormValue("card", 0)).toBe("0.00");
+    expect(balanceToFormValue("card", 5000)).toBe("-50.00");
+  });
+
+  it("shows other accounts as stored", () => {
+    expect(balanceToFormValue("bank", 35050)).toBe("350.50");
+    expect(balanceToFormValue("cash", -2000)).toBe("-20.00");
+  });
+
+  it("round-trips for every type", () => {
+    for (const type of ["cash", "bank", "card", "wallet"] as const) {
+      for (const stored of [-35050, 0, 12000]) {
+        const shown = balanceToFormValue(type, stored);
+        expect(toAccountInput({ name: "X", type, initialBalance: shown }).initialBalanceCents).toBe(stored);
+      }
+    }
   });
 });

@@ -19,11 +19,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatPen } from "@/lib/money";
+import { describeDebt } from "@/modules/accounts/card-summary";
 
 import { useCalibrationForm } from "../hooks/use-calibration-form";
 import type { CalibrationPreview } from "../types/calibration.types";
 
-function previewText(preview: CalibrationPreview): string {
+function previewText(preview: CalibrationPreview, isCard: boolean): string {
+  if (isCard) {
+    // A card is a debt: a balance that goes up means the debt goes down.
+    switch (preview.kind) {
+      case "none":
+        return "Escribe la deuda que muestra tu banco.";
+      case "same":
+        return "La deuda ya coincide, no hay nada que ajustar.";
+      case "income":
+        return `La deuda baja en ${formatPen(preview.amountCents)} · se registrará un ajuste.`;
+      case "expense":
+        return `La deuda sube en ${formatPen(preview.amountCents)} · se registrará un ajuste.`;
+    }
+  }
   switch (preview.kind) {
     case "none":
       return "Escribe el saldo que ves en tu banco o billetera.";
@@ -34,6 +48,14 @@ function previewText(preview: CalibrationPreview): string {
     case "expense":
       return `Diferencia: −${formatPen(preview.amountCents)} · se registrará un gasto de ajuste.`;
   }
+}
+
+function currentText(balanceCents: number | null, isCard: boolean): string {
+  if (balanceCents === null) return "—";
+  if (!isCard) return formatPen(balanceCents);
+  const debt = describeDebt(balanceCents);
+  if (debt.kind === "debt") return formatPen(debt.cents);
+  return debt.kind === "credit" ? `A favor ${formatPen(debt.cents)}` : "Sin deuda";
 }
 
 type CalibrationFormProps = { accountId?: string; onClose: () => void };
@@ -94,17 +116,21 @@ function CalibrationForm({ accountId, onClose }: CalibrationFormProps) {
       )}
 
       <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
-        <span className="text-muted-foreground">Saldo en la app</span>
+        <span className="text-muted-foreground">{c.isCard ? "Deuda en la app" : "Saldo en la app"}</span>
         <span className="font-semibold tabular-nums">
-          {c.currentBalanceCents === null ? "—" : formatPen(c.currentBalanceCents)}
+          {currentText(c.currentBalanceCents, c.isCard)}
         </span>
       </div>
 
       <FormField
-        label="Saldo real (S/)"
+        label={c.isCard ? "Deuda real (S/)" : "Saldo real (S/)"}
         htmlFor="cal-real"
         error={errors.realBalance?.message}
-        hint="Usa - para una deuda, por ejemplo en una tarjeta de crédito."
+        hint={
+          c.isCard
+            ? "La deuda que muestra tu banco, en positivo. Usa - si tienes saldo a favor."
+            : "Usa - si la cuenta está en negativo."
+        }
       >
         <Controller
           control={c.form.control}
@@ -126,7 +152,7 @@ function CalibrationForm({ accountId, onClose }: CalibrationFormProps) {
       </FormField>
 
       <p aria-live="polite" className="text-sm text-muted-foreground">
-        {previewText(c.preview)}
+        {previewText(c.preview, c.isCard)}
       </p>
 
       {c.submitError && <ErrorMessage message={c.submitError} />}

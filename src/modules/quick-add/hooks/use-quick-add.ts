@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 
-export type QuickAddKind = "expense" | "income" | "transfer" | "calibrate";
+export type QuickAddKind = "expense" | "income" | "transfer" | "calibrate" | "pay-card";
 
 export type QuickAddOptions = {
   /** Account the dialog is about (used by "calibrate"). */

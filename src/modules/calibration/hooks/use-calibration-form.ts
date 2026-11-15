@@ -9,6 +9,9 @@ import { useZodForm } from "@/hooks/use-zod-form";
 import type { SelectOption } from "@/components/shared/entity-select";
 import { useAccounts } from "@/modules/accounts/hooks/use-accounts";
 
+import { isCreditAccount } from "@/modules/accounts/account-kind";
+import { describeDebt } from "@/modules/accounts/card-summary";
+
 import { getCalibrationPreview } from "../calibration-preview";
 import {
   calibrationFormSchema,
@@ -46,12 +49,24 @@ export function useCalibrationForm({ accountId, onSuccess }: Options) {
 
   const accountOptions: SelectOption[] = accounts.map((a) => ({ id: a.id, name: a.name }));
   const currentBalanceCents = selected ? selected.balanceCents : null;
-  const preview = getCalibrationPreview(currentBalanceCents, realBalance);
+  const isCard = selected ? isCreditAccount(selected.type) : false;
+  const preview = getCalibrationPreview(currentBalanceCents, realBalance, { isCard });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const result = await calibrate.mutateAsync(toCalibrationInput(values));
-      toast.success(`Saldo calibrado · ${result.accountName}: ${formatPen(result.newBalanceCents)}`);
+      const result = await calibrate.mutateAsync(toCalibrationInput(values, { isCard }));
+      if (isCard) {
+        const debt = describeDebt(result.newBalanceCents);
+        const shown =
+          debt.kind === "debt"
+            ? formatPen(debt.cents)
+            : debt.kind === "credit"
+              ? `a favor ${formatPen(debt.cents)}`
+              : "sin deuda";
+        toast.success(`Deuda calibrada · ${result.accountName}: ${shown}`);
+      } else {
+        toast.success(`Saldo calibrado · ${result.accountName}: ${formatPen(result.newBalanceCents)}`);
+      }
       onSuccess();
     } catch (error) {
       applyServerError({
@@ -65,6 +80,7 @@ export function useCalibrationForm({ accountId, onSuccess }: Options) {
     form,
     accountOptions,
     selectedAccountName: selected?.name,
+    isCard,
     currentBalanceCents,
     preview,
     // Nothing to do when the balance already matches or is not valid yet.

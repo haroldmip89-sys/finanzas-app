@@ -32,6 +32,7 @@ vi.mock("@/modules/transfers/actions/transfers.actions", () => tr);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/categories/actions/categories.actions", () => cat);
 
+import { useQuickAdd } from "../hooks/use-quick-add";
 import { QuickActions } from "./quick-actions";
 import { QuickAddFab } from "./quick-add-fab";
 import { QuickAddProvider } from "./quick-add-provider";
@@ -52,6 +53,11 @@ function renderWithProviders(ui: ReactNode) {
       <QuickAddProvider>{ui}</QuickAddProvider>
     </QueryClientProvider>,
   );
+}
+
+function PayButton({ accountId }: { accountId: string }) {
+  const { open } = useQuickAdd();
+  return <button onClick={() => open("pay-card", { accountId })}>pay</button>;
 }
 
 describe("quick add", () => {
@@ -127,6 +133,28 @@ describe("quick add", () => {
       expect(await screen.findByRole("radio", { name: /Comida/ })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Más/ })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Guardar y agregar otro" })).toBeInTheDocument();
+    });
+  });
+
+  describe("pay card", () => {
+    const VISA = "66666666-6666-4666-8666-666666666666";
+
+    it("opens the payment with the card as destination and its debt as the amount", async () => {
+      acc.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [
+          ...accounts,
+          { id: VISA, name: "Visa", type: "card", archivedAt: null, balanceCents: -35000 },
+        ],
+      });
+      const user = userEvent.setup();
+      renderWithProviders(<PayButton accountId={VISA} />);
+
+      await user.click(screen.getByRole("button", { name: "pay" }));
+
+      expect(await screen.findByRole("heading", { name: "Pagar tarjeta" })).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByLabelText("Monto (S/)")).toHaveValue("350.00"));
+      expect(screen.getByText("Visa", { selector: "p" })).toBeInTheDocument();
     });
   });
 

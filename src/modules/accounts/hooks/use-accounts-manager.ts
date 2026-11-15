@@ -4,12 +4,15 @@ import { useState } from "react";
 
 import { errorMessage } from "@/lib/action-result";
 
+import { isCreditAccount, isLiquidAccount } from "../account-kind";
+import { sumCardDebt, sumLiquidBalance } from "../card-summary";
 import type { Account } from "../types/account.types";
 import {
   useDeleteAccount,
   useSetAccountArchived,
 } from "./use-account-mutations";
 import { useAccounts } from "./use-accounts";
+import { useCardSpending } from "./use-card-spending";
 
 type FormState = { mode: "closed" } | { mode: "create" } | { mode: "edit"; account: Account };
 type ConfirmState = { kind: "delete"; account: Account } | null;
@@ -24,8 +27,21 @@ export function useAccountsManager() {
   const archive = useSetAccountArchived();
   const remove = useDeleteAccount();
 
+  const accounts = query.data ?? [];
+  const cardAccounts = accounts.filter((a) => isCreditAccount(a.type));
+  const regularAccounts = accounts.filter((a) => isLiquidAccount(a.type));
+  // Only asked when there is a card: the figure means nothing without one.
+  const hasActiveCards = cardAccounts.some((a) => a.archivedAt === null);
+  const cardSpending = useCardSpending(hasActiveCards);
+
   return {
-    accounts: query.data ?? [],
+    accounts,
+    regularAccounts,
+    cardAccounts,
+    liquidCents: sumLiquidBalance(accounts),
+    debtCents: sumCardDebt(accounts),
+    hasActiveCards,
+    cardSpending: cardSpending.data,
     isLoading: query.isPending,
     loadError: query.isError ? errorMessage(query.error) : undefined,
     reload: () => query.refetch(),

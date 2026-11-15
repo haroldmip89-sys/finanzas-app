@@ -1,4 +1,5 @@
 import {
+  ChartNoAxesColumn,
   LayoutDashboard,
   Receipt,
   Settings,
@@ -14,11 +15,12 @@ export type NavItem = {
   matches?: string[];
 };
 
-// Cada spec agrega aquí su destino cuando exista (Análisis llega con la 008).
+// Cada spec agrega aquí su destino cuando exista.
 export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
   { href: "/transactions", label: "Movimientos", icon: Receipt, matches: ["/transfers"] },
   { href: "/accounts", label: "Cuentas", icon: Wallet },
+  { href: "/analysis", label: "Análisis", icon: ChartNoAxesColumn },
 ];
 
 // Ajustes no va en la barra inferior: se llega con el engranaje o el menú lateral.

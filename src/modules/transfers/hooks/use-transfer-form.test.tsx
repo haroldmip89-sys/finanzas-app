@@ -229,4 +229,144 @@ describe("useTransferForm", () => {
     );
     expect(onSuccess).not.toHaveBeenCalled();
   });
+
+  describe("paying a credit card", () => {
+    const VISA = "66666666-6666-4666-8666-666666666666";
+    const withCard = (visaBalance = -35000) => [
+      ...accounts,
+      { id: VISA, name: "Visa", type: "card", archivedAt: null, balanceCents: visaBalance },
+    ];
+
+    it("fixes the card as the destination and offers only liquid accounts as origin", async () => {
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: withCard() });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.isPayingCard).toBe(true);
+      expect(result.current.destinationName).toBe("Visa");
+      expect(result.current.form.getValues("toAccountId")).toBe(VISA);
+      expect(result.current.toOptions.map((a) => a.name)).toEqual(["Visa"]);
+      expect(result.current.fromOptions.map((a) => a.name)).toEqual(["BBVA", "Yape"]);
+    });
+
+    it("suggests the whole debt as the amount", async () => {
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: withCard(-35050) });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+
+      await waitFor(() => expect(result.current.form.getValues("amount")).toBe("350.50"));
+    });
+
+    it("suggests nothing when the card has no debt or credit in its favor", async () => {
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: withCard(0) });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.form.getValues("amount")).toBe("");
+
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: withCard(5000) });
+      const second = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(second.result.current.isLoadingOptions).toBe(false));
+
+      expect(second.result.current.form.getValues("amount")).toBe("");
+    });
+
+    it("keeps the amount editable and does not override it later", async () => {
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: withCard(-35000) });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.form.getValues("amount")).toBe("350.00"));
+
+      act(() => result.current.form.setValue("amount", "100"));
+
+      expect(result.current.form.getValues("amount")).toBe("100");
+    });
+
+    it("asks for a liquid account when there is none", async () => {
+      acc.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [{ id: VISA, name: "Visa", type: "card", archivedAt: null, balanceCents: -100 }],
+      });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+
+      await waitFor(() => expect(result.current.needsMoreAccounts).toBe(true));
+      expect(result.current.isPayingCard).toBe(true);
+    });
+
+    it("reports an unavailable card (missing or archived)", async () => {
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: accounts });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+
+      await waitFor(() => expect(result.current.cardUnavailable).toBe(true));
+    });
+
+    it("needs only one liquid account, not two", async () => {
+      acc.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [accounts[0], { id: VISA, name: "Visa", type: "card", archivedAt: null, balanceCents: -100 }],
+      });
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.needsMoreAccounts).toBe(false);
+    });
+
+    it("sends the payment to the card and toasts it as a card payment", async () => {
+      tr.createTransferAction.mockResolvedValue({ ok: true, data: {} });
+      acc.listAccountsAction.mockResolvedValue({ ok: true, data: withCard(-35000) });
+      const onSuccess = vi.fn();
+      const { result } = renderHook(
+        () => useTransferForm({ payCardId: VISA, onSuccess }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.form.getValues("amount")).toBe("350.00"));
+
+      act(() => result.current.changeFrom(BBVA));
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(tr.createTransferAction).toHaveBeenCalledWith({
+        fromAccountId: BBVA,
+        toAccountId: VISA,
+        amountCents: 35000,
+        date: "2026-11-15",
+        note: null,
+      });
+      expect(toastMock.success).toHaveBeenCalledWith(
+        expect.stringMatching(/Pago de tarjeta guardado · S\/\s350\.00/),
+      );
+      expect(onSuccess).toHaveBeenCalled();
+    });
+
+    it("does not change the normal transfer behavior", async () => {
+      const { result } = renderHook(() => useTransferForm({ onSuccess: vi.fn() }), { wrapper });
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.isPayingCard).toBe(false);
+      expect(result.current.fromOptions.map((a) => a.name)).toEqual(["BBVA", "Yape"]);
+    });
+  });
 });

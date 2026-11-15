@@ -1,6 +1,6 @@
 # Calibración de saldos
 
-Estado: aprobada
+Estado: hecha
 
 ## Objetivo
 

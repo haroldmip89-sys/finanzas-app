@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import {
   Banknote,
   Briefcase,
@@ -53,4 +54,15 @@ export const CATEGORY_ICONS: Record<CategoryIconKey, LucideIcon> = {
 /** Resolves a stored icon key to its component, falling back to the default. */
 export function getCategoryIcon(key: string | null | undefined): LucideIcon {
   return CATEGORY_ICONS[(key ?? DEFAULT_CATEGORY_ICON) as CategoryIconKey] ?? Tag;
+}
+
+type CategoryIconProps = {
+  /** Stored icon key (categories.icon); unknown or empty keys use the default. */
+  iconKey: string | null | undefined;
+  className?: string;
+};
+
+/** Renders the icon of a category from its stored key. */
+export function CategoryIcon({ iconKey, className }: CategoryIconProps) {
+  return createElement(getCategoryIcon(iconKey), { "aria-hidden": true, className });
 }

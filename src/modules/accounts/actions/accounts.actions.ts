@@ -22,6 +22,15 @@ export async function listAccountsAction(
   });
 }
 
+export async function cardSpendingAction(): Promise<
+  ActionResult<{ currentMonthCents: number; previousMonthCents: number }>
+> {
+  return runAction(async () => {
+    const userId = await requireUserId();
+    return accountsService.cardSpending(userId);
+  });
+}
+
 export async function createAccountAction(
   input: unknown,
 ): Promise<ActionResult<Account>> {

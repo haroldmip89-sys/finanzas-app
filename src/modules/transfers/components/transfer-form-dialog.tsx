@@ -25,12 +25,46 @@ import type { TransferListItem } from "../types/transfer.types";
 
 type TransferFormProps = {
   transfer?: TransferListItem;
+  payCardId?: string;
   onClose: () => void;
 };
 
-function TransferForm({ transfer, onClose }: TransferFormProps) {
-  const t = useTransferForm({ transfer, onSuccess: onClose });
+function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
+  const t = useTransferForm({ transfer, payCardId, onSuccess: onClose });
   const { errors } = t.form.formState;
+
+  if (t.cardUnavailable) {
+    return (
+      <div className="space-y-4">
+        <DialogHeader>
+          <DialogTitle>Pagar tarjeta</DialogTitle>
+          <DialogDescription>No se puede pagar esta tarjeta.</DialogDescription>
+        </DialogHeader>
+        <ErrorMessage message="La tarjeta no existe o está archivada." />
+      </div>
+    );
+  }
+
+  if (t.needsMoreAccounts && t.isPayingCard) {
+    return (
+      <div className="space-y-4">
+        <DialogHeader>
+          <DialogTitle>Pagar tarjeta</DialogTitle>
+          <DialogDescription>Necesitas una cuenta desde donde pagar.</DialogDescription>
+        </DialogHeader>
+        <EmptyState
+          icon={Wallet}
+          title="No tienes una cuenta para pagar"
+          description="Crea una cuenta de efectivo, banco o billetera para pagar la tarjeta."
+          action={
+            <Link href="/accounts" className={buttonVariants({ className: "min-h-11 sm:min-h-8" })}>
+              Ir a Cuentas
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
 
   if (t.needsMoreAccounts) {
     return (
@@ -56,9 +90,17 @@ function TransferForm({ transfer, onClose }: TransferFormProps) {
   return (
     <form onSubmit={t.onSubmit} noValidate className="space-y-4">
       <DialogHeader>
-        <DialogTitle>{t.isEditing ? "Editar transferencia" : "Nueva transferencia"}</DialogTitle>
+        <DialogTitle>
+          {t.isPayingCard
+            ? "Pagar tarjeta"
+            : t.isEditing
+              ? "Editar transferencia"
+              : "Nueva transferencia"}
+        </DialogTitle>
         <DialogDescription>
-          Mueve dinero entre tus cuentas. No cuenta como ingreso ni gasto.
+          {t.isPayingCard
+            ? `Paga ${t.destinationName ?? "la tarjeta"} desde una de tus cuentas. No cuenta como gasto.`
+            : "Mueve dinero entre tus cuentas. No cuenta como ingreso ni gasto."}
         </DialogDescription>
       </DialogHeader>
 
@@ -78,21 +120,28 @@ function TransferForm({ transfer, onClose }: TransferFormProps) {
         />
       </FormField>
 
-      <FormField label="Hacia" htmlFor="tr-to" error={errors.toAccountId?.message}>
-        <Controller
-          control={t.form.control}
-          name="toAccountId"
-          render={({ field }) => (
-            <EntitySelect
-              id="tr-to"
-              value={field.value}
-              options={t.toOptions}
-              placeholder="Cuenta de destino"
-              onChange={field.onChange}
-            />
-          )}
-        />
-      </FormField>
+      {t.isPayingCard ? (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">Hacia</p>
+          <p className="rounded-lg bg-muted px-3 py-2 text-sm">{t.destinationName}</p>
+        </div>
+      ) : (
+        <FormField label="Hacia" htmlFor="tr-to" error={errors.toAccountId?.message}>
+          <Controller
+            control={t.form.control}
+            name="toAccountId"
+            render={({ field }) => (
+              <EntitySelect
+                id="tr-to"
+                value={field.value}
+                options={t.toOptions}
+                placeholder="Cuenta de destino"
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </FormField>
+      )}
 
       <FormField label="Monto (S/)" htmlFor="tr-amount" error={errors.amount?.message}>
         <Controller
@@ -101,6 +150,7 @@ function TransferForm({ transfer, onClose }: TransferFormProps) {
           render={({ field }) => (
             <MoneyInput
               id="tr-amount"
+              autoFocus={t.isPayingCard}
               value={field.value}
               onValueChange={field.onChange}
               onBlur={field.onBlur}
@@ -158,15 +208,17 @@ function TransferForm({ transfer, onClose }: TransferFormProps) {
 type TransferFormDialogProps = {
   open: boolean;
   transfer?: TransferListItem;
+  /** Pays this card instead of a free transfer. */
+  payCardId?: string;
   onClose: () => void;
 };
 
-export function TransferFormDialog({ open, transfer, onClose }: TransferFormDialogProps) {
+export function TransferFormDialog({ open, transfer, payCardId, onClose }: TransferFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent sheet>
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
-        <TransferForm transfer={transfer} onClose={onClose} />
+        <TransferForm transfer={transfer} payCardId={payCardId} onClose={onClose} />
       </DialogContent>
     </Dialog>
   );

@@ -24,7 +24,11 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
         defaultType={kind === "income" ? "income" : "expense"}
         onClose={close}
       />
-      <TransferFormDialog open={kind === "transfer"} onClose={close} />
+      <TransferFormDialog
+        open={kind === "transfer" || kind === "pay-card"}
+        payCardId={kind === "pay-card" ? accountId : undefined}
+        onClose={close}
+      />
       <CalibrationDialog open={kind === "calibrate"} accountId={accountId} onClose={close} />
     </QuickAddContext.Provider>
   );

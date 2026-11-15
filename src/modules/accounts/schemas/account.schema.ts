@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { penToCents } from "@/lib/money";
+import { centsToPen, penToCents } from "@/lib/money";
 import { MAX_CENTS } from "@/lib/validation";
 
 export const ACCOUNT_TYPES = ["cash", "bank", "card", "wallet"] as const;
@@ -47,12 +47,25 @@ export const listAccountsSchema = z.object({
 export type AccountInput = z.infer<typeof accountInputSchema>;
 export type AccountFormValues = z.infer<typeof accountFormSchema>;
 
+/**
+ * A card's balance is a debt: the user types it as a positive number and it is
+ * stored as a negative balance. Other accounts keep the sign as typed.
+ */
+function signedBalance(type: AccountInput["type"], typedCents: number): number {
+  return type === "card" && typedCents !== 0 ? -typedCents : typedCents;
+}
+
 /** Converts validated form values to the server contract. */
 export function toAccountInput(values: AccountFormValues): AccountInput {
+  const typed = values.initialBalance === "" ? 0 : (penToCents(values.initialBalance) ?? 0);
   return {
     name: values.name,
     type: values.type,
-    initialBalanceCents:
-      values.initialBalance === "" ? 0 : (penToCents(values.initialBalance) ?? 0),
+    initialBalanceCents: signedBalance(values.type, typed),
   };
+}
+
+/** The initial balance as the form shows it (a card's debt is positive). */
+export function balanceToFormValue(type: AccountInput["type"], balanceCents: number): string {
+  return centsToPen(signedBalance(type, balanceCents));
 }

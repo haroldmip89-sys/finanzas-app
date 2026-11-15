@@ -93,21 +93,13 @@ Botón global "+" accesible desde cualquier sección autenticada con Nuevo gasto
 - En móvil, el formulario como **bottom sheet** (hoy es un diálogo centrado); en escritorio sigue siendo diálogo o panel. Se implementa con el diálogo actual, sin dependencia nueva, salvo que se justifique.
 - Mantener controles táctiles de al menos 44 px, teclado numérico para el importe y validaciones de integridad en servidor.
 
-### 5.5. Control básico de tarjetas de crédito — P0 (nuevo)
+### 5.5. Tarjetas de crédito (versión ligera) — P1 (nuevo)
 
-Las tarjetas son cuentas de crédito, no dinero disponible. Diferenciar compras con tarjeta, deuda pendiente, cuotas futuras, pagos realizados e intereses y comisiones.
+Objetivo del usuario: **depender menos de las tarjetas**, sin registrar fechas ni cuotas. Una tarjeta es una cuenta de crédito: **deuda, no dinero disponible**. Todo se deduce de lo que ya se registra: las compras con tarjeta son gastos de la cuenta-tarjeta y el pago es una **transferencia** (nunca un segundo gasto).
 
-**Compras en cuotas:** importe total, número de cuotas, fecha de compra, fecha de primera cuota y tarjeta. Mostrar importe de cada cuota, cuotas pendientes, próximos vencimientos y total pendiente.
+Incluye: separar cuentas y tarjetas, mostrar la deuda, escribir la deuda en positivo, el atajo "Pagar tarjeta" y la cifra **Compras con tarjeta este mes** frente al mes anterior. La deuda real (incluidas cuotas que ya tenga el banco) se actualiza **calibrando** la tarjeta con el valor que muestra el banco.
 
-Reglas contables:
-
-- La compra es un gasto.
-- El **pago de la tarjeta es una transferencia** entre cuentas (ya soportado), no un segundo gasto.
-- Intereses y comisiones sí son gastos.
-- Las devoluciones se asocian a la compra original.
-- Los compromisos futuros influyen en el dinero disponible según su vencimiento.
-
-No construir un módulo completo de préstamos ni amortizaciones complejas.
+No incluye (se retomaría solo si hace falta): día de cierre y de pago, límite de crédito, compras en cuotas con vencimientos, intereses calculados, pago mínimo y devoluciones asociadas a la compra. No se construye un módulo de préstamos.
 
 ### 5.6. Dashboard orientado a decisiones — P0
 
@@ -182,33 +174,31 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | — | 001, 001b, 001c | Auth, tema y layout, login con carrusel | — | Hecha |
 | — | 002 a 005 | Base de datos, cuentas y categorías, transacciones, transferencias | — | Hecha |
 | — | 006 | Acciones rápidas | P0 | Hecha |
-| 1 | 006b | Navegación a 4 destinos y formularios como bottom sheet en móvil | P0 | Pendiente |
-| 2 | 007 | Calibración de saldos (ajuste, fuera de ingresos y gastos) | P0 | Pendiente |
-| 3 | 007a | Tarjetas de crédito: cuentas de crédito, deuda, pago como transferencia, cuotas | P0 | Pendiente (nuevo) |
-| 4 | 008 | Presupuestos mensuales por categoría | P1 | Pendiente |
-| 5 | 009a | Dinero disponible (fórmula, explicación, reservas, obligaciones) | P0 | Pendiente (nuevo) |
-| 6 | 009 | Dashboard orientado a decisiones | P0 | Pendiente |
-| 7 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Pendiente, antes de desplegar |
-| 8 | 010a | Compras impulsivas evitadas | P1 | Pendiente (nuevo) |
-| 9 | 010c | Compra consciente | P1 | Pendiente (nuevo) |
-| 10 | 010b | Resumen financiero semanal | P1 | Pendiente (nuevo) |
-| 11 | 011 | PWA | — | Pospuesta |
-| 12 | 012 | Rediseño visual con Artifact Design | — | Evolutivo |
+| 1 | 006b | Navegación a 4 destinos y formularios como bottom sheet en móvil | P0 | Hecha |
+| 2 | 007 | Calibración de saldos (ajuste, fuera de ingresos y gastos) | P0 | Hecha |
+| 3 | 007a-1 | Tarjetas de crédito (versión ligera): deuda, totales líquido y deuda, compras con tarjeta del mes, pagar tarjeta; sin fechas ni cuotas | P1 | Hecha |
+| 4 | 012 | Base visual con Artifact Design (prompt en `docs/design/`, spec 012-ui-foundation): tokens, componentes y pantallas existentes, sin cambiar el comportamiento | — | Spec escrita, esperando el diseño |
+| — | 007a-2 | Compras en cuotas, vencimientos, intereses y devoluciones | — | Pospuesta (solo si se necesita) |
+| 5 | 008 | Presupuestos mensuales por categoría | P1 | Hecha |
+| 6 | 009a | Dinero disponible (fórmula, explicación, reservas, obligaciones) | P0 | Pendiente (nuevo) |
+| 7 | 009 | Dashboard orientado a decisiones | P0 | Pendiente |
+| 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Pendiente, antes de desplegar |
+| 9 | 010a | Compras impulsivas evitadas | P1 | Pendiente (nuevo) |
+| 10 | 010c | Compra consciente | P1 | Pendiente (nuevo) |
+| 11 | 010b | Resumen financiero semanal | P1 | Pendiente (nuevo) |
+| 12 | 011 | PWA | — | Pospuesta |
 
-Cambios respecto al v0.2: se añaden 006b y 007a, que el v0.2 pide (navegación, tarjetas) pero no numera; la spec 009a (dinero disponible) se construye **antes** que el dashboard, porque este lo muestra primero y depende de tarjetas y reservas; y la compra consciente recibe el id 010c, porque el v0.2 no le asigna uno.
+Cambios respecto al v0.2: se añade 006b, que el v0.2 pide (navegación) pero no numera; las tarjetas pasan a una **versión ligera** (007a-1: sin fechas, límite ni cuotas, porque el usuario no quiere registrar ese detalle) y las cuotas (007a-2) quedan pospuestas; la spec 009a (dinero disponible) se construye **antes** que el dashboard, porque este lo muestra primero; y la compra consciente recibe el id 010c, porque el v0.2 no le asigna uno.
 
-Recomendación de fases para contener el alcance (las specs 007a y 009a son las más grandes):
-
-- **007a-1:** tarjetas como cuentas de crédito (día de cierre y de pago, límite opcional), deuda visible y pago como transferencia. **007a-2:** compras en cuotas, vencimientos y devoluciones.
-- **009a v1:** líquido − deuda de tarjetas que vence en el período − reservas, marcado como estimado. **v2:** suma las cuotas futuras cuando exista 007a-2.
+Dinero disponible simplificado (009a): **dinero líquido − deuda total de tarjetas − reservas**, sin fechas de vencimiento ni cuotas, siempre marcado como estimado. Las reservas se resuelven con un interruptor por cuenta ("incluir en dinero disponible"), por ejemplo para la cuenta de emergencia.
 
 ## 11. Decisiones por resolver
 
 Se cierran al escribir cada spec, siempre con aprobación del usuario:
 
 1. **Representación de los ajustes de saldo (007).** Opciones: transacciones marcadas como ajuste con categorías de sistema (no entran en totales ni presupuestos), o un nuevo tipo de transacción. Hoy el tipo de la transacción debe coincidir con el tipo de la categoría por una clave compuesta.
-2. **Liquidez de las cuentas.** Se propone derivarla del tipo: efectivo, banco y billetera son líquidos; tarjeta es crédito. Las tarjetas necesitarán campos propios (cierre, vencimiento, límite).
-3. **Obligaciones pendientes más allá de las tarjetas.** El v0.2 menciona obligaciones en general; se propone que la primera versión incluya solo tarjetas, cuotas y reservas.
+2. **Liquidez de las cuentas.** Se deriva del tipo: efectivo, banco y billetera son líquidos; tarjeta es crédito. Decidido: las tarjetas no tienen campos propios (sin cierre, vencimiento ni límite).
+3. **Obligaciones pendientes.** El v0.2 menciona obligaciones en general; se propone que el dinero disponible reste solo la **deuda total de tarjetas** y las reservas, sin fechas ni cuotas.
 4. **Período de planificación.** Fecha de próximo ingreso conocida o fecha elegida por el usuario: ¿se configura en ajustes o se pregunta al usuario?
 5. **Umbral de la compra consciente** y duración por defecto de la pausa (10 minutos o 24 horas).
 6. **Bottom sheet.** Estilizar el diálogo actual (sin dependencia) frente a agregar una librería de drawer.

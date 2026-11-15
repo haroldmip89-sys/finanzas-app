@@ -1,23 +1,13 @@
 "use client";
 
-import { EllipsisVertical } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export type ResourceAction = {
-  label: string;
-  onSelect: () => void;
-  destructive?: boolean;
-};
+import { ActionsMenu, type ResourceAction } from "./actions-menu";
+
+export type { ResourceAction };
 
 type ResourceCardProps = {
   icon: LucideIcon;
@@ -61,31 +51,7 @@ export function ResourceCard({
       </div>
       {value && <p className="shrink-0 font-semibold tabular-nums">{value}</p>}
       {badge}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={menuLabel}
-              className="size-11 md:size-8"
-            />
-          }
-        >
-          <EllipsisVertical />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {actions.map((action) => (
-            <DropdownMenuItem
-              key={action.label}
-              variant={action.destructive ? "destructive" : "default"}
-              onClick={action.onSelect}
-            >
-              {action.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ActionsMenu actions={actions} label={menuLabel} />
     </li>
   );
 }

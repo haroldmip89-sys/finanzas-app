@@ -32,3 +32,29 @@ describe("getCalibrationPreview", () => {
     expect(getCalibrationPreview(1999, "20.00")).toEqual({ kind: "income", amountCents: 1 });
   });
 });
+
+describe("getCalibrationPreview for cards (typed value is the debt)", () => {
+  const card = { isCard: true };
+
+  it("is same when the typed debt equals the current debt", () => {
+    expect(getCalibrationPreview(-35000, "350", card)).toEqual({ kind: "same" });
+    expect(getCalibrationPreview(0, "0", card)).toEqual({ kind: "same" });
+  });
+
+  it("a lower real debt is an increase of the balance (income adjustment)", () => {
+    expect(getCalibrationPreview(-35000, "300", card)).toEqual({ kind: "income", amountCents: 5000 });
+  });
+
+  it("a higher real debt is a decrease of the balance (expense adjustment)", () => {
+    expect(getCalibrationPreview(-35000, "400", card)).toEqual({ kind: "expense", amountCents: 5000 });
+    expect(getCalibrationPreview(0, "120", card)).toEqual({ kind: "expense", amountCents: 12000 });
+  });
+
+  it("a negative typed value is credit in favor", () => {
+    expect(getCalibrationPreview(-10000, "-50", card)).toEqual({ kind: "income", amountCents: 15000 });
+  });
+
+  it("ignores the card flag for normal accounts", () => {
+    expect(getCalibrationPreview(10000, "50", { isCard: false })).toEqual({ kind: "expense", amountCents: 5000 });
+  });
+});

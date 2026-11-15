@@ -30,7 +30,7 @@ import type { Account } from "../types/account.types";
 type AccountFormProps = { account?: Account; onClose: () => void };
 
 function AccountForm({ account, onClose }: AccountFormProps) {
-  const { form, onSubmit, submitError, isPending, isEditing } = useAccountForm({
+  const { form, isCard, onSubmit, submitError, isPending, isEditing } = useAccountForm({
     account,
     onSuccess: onClose,
   });
@@ -82,10 +82,14 @@ function AccountForm({ account, onClose }: AccountFormProps) {
       </FormField>
 
       <FormField
-        label="Saldo inicial (S/)"
+        label={isCard ? "Deuda actual (S/)" : "Saldo inicial (S/)"}
         htmlFor="account-balance"
         error={errors.initialBalance?.message}
-        hint="Lo que tienes hoy en esta cuenta. Déjalo vacío si es 0. Usa - para una deuda, ej. tarjeta de crédito."
+        hint={
+          isCard
+            ? "Lo que debes hoy en la tarjeta, en positivo. Déjalo vacío si no debes nada. Usa - si tienes saldo a favor."
+            : "Lo que tienes hoy en esta cuenta. Déjalo vacío si es 0."
+        }
       >
         <Controller
           control={form.control}

@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { unwrapResult } from "@/lib/action-result";
+import { budgetsKey } from "@/lib/query-keys";
 import { accountsKey } from "@/modules/accounts/hooks/use-accounts";
 
 import {
@@ -13,13 +14,15 @@ import {
 import type { TransactionInput } from "../schemas/transaction.schema";
 import { transactionsKey } from "./use-transactions";
 
-/** Transactions change account balances, so both lists are refreshed. */
+/** Transactions change balances and budget spending: all of them refresh. */
 function useInvalidate() {
   const client = useQueryClient();
   return async () => {
     await Promise.all([
       client.invalidateQueries({ queryKey: transactionsKey }),
       client.invalidateQueries({ queryKey: accountsKey }),
+      // Budgets show what was spent, so a saved transaction changes them too.
+      client.invalidateQueries({ queryKey: budgetsKey }),
     ]);
   };
 }

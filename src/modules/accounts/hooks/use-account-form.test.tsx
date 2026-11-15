@@ -152,4 +152,71 @@ describe("useAccountForm", () => {
 
     await waitFor(() => expect(result.current.submitError).toBe("Ocurrió un error inesperado."));
   });
+
+  describe("credit cards", () => {
+    it("tells whether the selected type is a card", async () => {
+      const { result } = renderHook(() => useAccountForm({ onSuccess: vi.fn() }), { wrapper });
+      expect(result.current.isCard).toBe(false);
+
+      act(() => result.current.form.setValue("type", "card"));
+
+      expect(result.current.isCard).toBe(true);
+    });
+
+    it("sends the typed debt as a negative initial balance", async () => {
+      actions.createAccountAction.mockResolvedValue({ ok: true, data: existing });
+      const { result } = renderHook(() => useAccountForm({ onSuccess: vi.fn() }), { wrapper });
+
+      act(() => {
+        result.current.form.setValue("name", "Visa");
+        result.current.form.setValue("type", "card");
+        result.current.form.setValue("initialBalance", "350.50");
+      });
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(actions.createAccountAction).toHaveBeenCalledWith({
+        name: "Visa",
+        type: "card",
+        initialBalanceCents: -35050,
+      });
+    });
+
+    it("shows a stored card debt as a positive number when editing and keeps it on save", async () => {
+      actions.updateAccountAction.mockResolvedValue({ ok: true, data: existing });
+      const card = { ...existing, type: "card" as const, initialBalanceCents: -35050 };
+      const { result } = renderHook(() => useAccountForm({ account: card, onSuccess: vi.fn() }), { wrapper });
+
+      expect(result.current.form.getValues("initialBalance")).toBe("350.50");
+      expect(result.current.isCard).toBe(true);
+
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(actions.updateAccountAction).toHaveBeenCalledWith(
+        card.id,
+        expect.objectContaining({ type: "card", initialBalanceCents: -35050 }),
+      );
+    });
+
+    it("keeps the sign as typed for a bank account", async () => {
+      actions.createAccountAction.mockResolvedValue({ ok: true, data: existing });
+      const { result } = renderHook(() => useAccountForm({ onSuccess: vi.fn() }), { wrapper });
+
+      act(() => {
+        result.current.form.setValue("name", "BBVA");
+        result.current.form.setValue("type", "bank");
+        result.current.form.setValue("initialBalance", "100");
+      });
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(actions.createAccountAction).toHaveBeenCalledWith(
+        expect.objectContaining({ initialBalanceCents: 10000 }),
+      );
+    });
+  });
 });

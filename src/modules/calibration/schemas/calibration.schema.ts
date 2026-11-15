@@ -25,10 +25,17 @@ export const calibrationFormSchema = z.object({
 export type CalibrationInput = z.infer<typeof calibrationInputSchema>;
 export type CalibrationFormValues = z.infer<typeof calibrationFormSchema>;
 
-/** Converts validated form values to the server contract. */
-export function toCalibrationInput(values: CalibrationFormValues): CalibrationInput {
+/**
+ * Converts validated form values to the server contract. For a card the user
+ * types the real debt (positive), which is a negative balance.
+ */
+export function toCalibrationInput(
+  values: CalibrationFormValues,
+  options: { isCard?: boolean } = {},
+): CalibrationInput {
+  const typed = penToCents(values.realBalance) ?? 0;
   return {
     accountId: values.accountId,
-    realBalanceCents: penToCents(values.realBalance) ?? 0,
+    realBalanceCents: options.isCard && typed !== 0 ? -typed : typed,
   };
 }

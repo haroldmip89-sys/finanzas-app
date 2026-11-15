@@ -11,6 +11,7 @@ const actions = vi.hoisted(() => ({
   updateAccountAction: vi.fn(),
   setAccountArchivedAction: vi.fn(),
   deleteAccountAction: vi.fn(),
+  cardSpendingAction: vi.fn(),
 }));
 
 vi.mock("../actions/accounts.actions", () => actions);
@@ -128,5 +129,82 @@ describe("useAccountsManager", () => {
       expect(result.current.deleteError).toBe("No se puede eliminar. Archívala en su lugar."),
     );
     expect(result.current.confirm).not.toBeNull();
+  });
+
+  describe("cards and totals", () => {
+    const card: AccountWithBalance = {
+      ...account,
+      id: "77777777-7777-4777-8777-777777777777",
+      name: "Visa",
+      type: "card",
+      initialBalanceCents: 0,
+      balanceCents: -35000,
+    };
+    const wallet: AccountWithBalance = {
+      ...account,
+      id: "88888888-8888-4888-8888-888888888888",
+      name: "Yape",
+      type: "wallet",
+      balanceCents: 2500,
+    };
+
+    it("splits cards from the rest and totals liquid money and debt", async () => {
+      actions.listAccountsAction.mockResolvedValue({ ok: true, data: [account, wallet, card] });
+      actions.cardSpendingAction.mockResolvedValue({
+        ok: true,
+        data: { currentMonthCents: 12000, previousMonthCents: 5000 },
+      });
+      const { result } = renderHook(() => useAccountsManager(), { wrapper });
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.regularAccounts.map((a) => a.name)).toEqual(["BCP", "Yape"]);
+      expect(result.current.cardAccounts.map((a) => a.name)).toEqual(["Visa"]);
+      expect(result.current.liquidCents).toBe(1000 + 2500);
+      expect(result.current.debtCents).toBe(35000);
+      expect(result.current.hasActiveCards).toBe(true);
+      await waitFor(() =>
+        expect(result.current.cardSpending).toEqual({ currentMonthCents: 12000, previousMonthCents: 5000 }),
+      );
+    });
+
+    it("does not ask for card spending when there are no cards", async () => {
+      actions.listAccountsAction.mockResolvedValue({ ok: true, data: [account, wallet] });
+      const { result } = renderHook(() => useAccountsManager(), { wrapper });
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.hasActiveCards).toBe(false);
+      expect(result.current.cardAccounts).toEqual([]);
+      expect(result.current.debtCents).toBe(0);
+      expect(actions.cardSpendingAction).not.toHaveBeenCalled();
+    });
+
+    it("ignores archived cards for the debt and for asking card spending", async () => {
+      actions.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [account, { ...card, archivedAt: new Date() }],
+      });
+      const { result } = renderHook(() => useAccountsManager(), { wrapper });
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.cardAccounts).toHaveLength(1);
+      expect(result.current.debtCents).toBe(0);
+      expect(result.current.hasActiveCards).toBe(false);
+      expect(actions.cardSpendingAction).not.toHaveBeenCalled();
+    });
+
+    it("keeps archived liquid accounts out of the liquid total", async () => {
+      actions.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [account, { ...wallet, archivedAt: new Date() }],
+      });
+      const { result } = renderHook(() => useAccountsManager(), { wrapper });
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.liquidCents).toBe(1000);
+    });
   });
 });

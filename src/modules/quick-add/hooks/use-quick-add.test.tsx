@@ -58,6 +58,15 @@ describe("useQuickAddState", () => {
     expect(result.current.accountId).toBeUndefined();
   });
 
+  it("opens the card payment for a given card", () => {
+    const { result } = renderHook(() => useQuickAddState());
+
+    act(() => result.current.open("pay-card", { accountId: "card-1" }));
+
+    expect(result.current.kind).toBe("pay-card");
+    expect(result.current.accountId).toBe("card-1");
+  });
+
   it("keeps only one dialog open at a time", () => {
     const { result } = renderHook(() => useQuickAddState());
 

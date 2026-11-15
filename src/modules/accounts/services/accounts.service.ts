@@ -1,8 +1,9 @@
-import { and, asc, eq, getTableColumns, sql } from "drizzle-orm";
+import { and, asc, eq, getTableColumns, isNull, sql } from "drizzle-orm";
 
 import { db as defaultDb } from "@/db/client";
-import { accounts } from "@/db/schema";
+import { accounts, categories, transactions } from "@/db/schema";
 import type { Database } from "@/db/types";
+import { currentMonthRange, previousMonthRange } from "@/lib/dates";
 import {
   AppError,
   PG_UNIQUE_VIOLATION,
@@ -124,8 +125,46 @@ export function createAccountsService(db: Database) {
     }
   }
 
+  /**
+   * Expenses registered on card accounts this month and last month (Lima).
+   * Balance adjustments are not purchases and card payments are transfers, so
+   * neither is counted. One query for both months.
+   */
+  async function cardSpending(
+    userId: string,
+    now: Date = new Date(),
+  ): Promise<{ currentMonthCents: number; previousMonthCents: number }> {
+    const current = currentMonthRange(now);
+    const previous = previousMonthRange(now);
+    const inRange = (range: { from: string; to: string }) =>
+      sql`${transactions.date} >= ${range.from}::date and ${transactions.date} <= ${range.to}::date`;
+
+    const [row] = await db
+      .select({
+        currentMonthCents: sql<number>`coalesce(sum(${transactions.amountCents}) filter (where ${inRange(current)}), 0)::float8`,
+        previousMonthCents: sql<number>`coalesce(sum(${transactions.amountCents}) filter (where ${inRange(previous)}), 0)::float8`,
+      })
+      .from(transactions)
+      .innerJoin(accounts, eq(accounts.id, transactions.accountId))
+      .innerJoin(categories, eq(categories.id, transactions.categoryId))
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          eq(accounts.type, "card"),
+          eq(transactions.type, "expense"),
+          isNull(categories.systemKey),
+        ),
+      );
+
+    return {
+      currentMonthCents: row?.currentMonthCents ?? 0,
+      previousMonthCents: row?.previousMonthCents ?? 0,
+    };
+  }
+
   return {
     list,
+    cardSpending,
     create,
     update,
     archive: (userId: string, id: string) => setArchived(userId, id, true),

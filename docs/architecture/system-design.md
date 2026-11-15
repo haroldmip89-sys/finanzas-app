@@ -61,6 +61,12 @@ Mueve dinero entre dos cuentas del mismo usuario. No es ingreso ni gasto: no tie
 
 Restricciones: `CHECK (from_account_id <> to_account_id)`; claves foráneas compuestas (`from_account_id`, `user_id`) y (`to_account_id`, `user_id`) hacia `accounts(id, user_id)`. Índices: (`user_id`, `date` desc), (`user_id`, `from_account_id`), (`user_id`, `to_account_id`).
 
+### Cuentas líquidas y de crédito
+
+La clasificación se deduce del tipo de cuenta, sin un campo propio: `cash`, `bank` y `wallet` son **líquidas** (dinero que se puede gastar); `card` es de **crédito** (deuda). El saldo negativo de una tarjeta es su deuda y se escribe en positivo en los formularios. Pagar una tarjeta es una transferencia desde una cuenta líquida. Las compras con tarjeta del mes son los gastos (sin ajustes de saldo) de cuentas tipo tarjeta.
+
+Gastado de un presupuesto: suma de los gastos de su categoría durante el mes, en todas las cuentas (las tarjetas cuentan); no cuentan ingresos, transferencias ni ajustes de saldo. Solo hay presupuestos de categorías de gasto (lo impone la clave compuesta).
+
 ### Invariantes
 
 1. Un recurso solo se lee o escribe si su `user_id` coincide con el del usuario autenticado; también la cuenta y la categoría referenciadas por una transacción.

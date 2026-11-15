@@ -1,11 +1,12 @@
 "use client";
 
 import { ActionFailure, errorMessage } from "@/lib/action-result";
-import { centsToPen } from "@/lib/money";
 import { useZodForm } from "@/hooks/use-zod-form";
 
+import { isCreditAccount } from "../account-kind";
 import {
   accountFormSchema,
+  balanceToFormValue,
   toAccountInput,
   type AccountFormValues,
 } from "../schemas/account.schema";
@@ -16,7 +17,7 @@ function defaultsFor(account?: Account): AccountFormValues {
   return {
     name: account?.name ?? "",
     type: account?.type ?? "cash",
-    initialBalance: account ? centsToPen(account.initialBalanceCents) : "",
+    initialBalance: account ? balanceToFormValue(account.type, account.initialBalanceCents) : "",
   };
 }
 
@@ -43,6 +44,8 @@ export function useAccountForm({ account, onSuccess }: Options) {
 
   return {
     form,
+    // A card's balance is a debt: the form asks for "Deuda" instead of a balance.
+    isCard: isCreditAccount(form.watch("type")),
     onSubmit,
     submitError,
     isPending: save.isPending,

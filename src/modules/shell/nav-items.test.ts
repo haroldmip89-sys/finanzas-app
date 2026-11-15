@@ -47,8 +47,8 @@ describe("isItemActive", () => {
 });
 
 describe("navItems", () => {
-  it("has the three main destinations", () => {
-    expect(navItems.map((i) => i.label)).toEqual(["Inicio", "Movimientos", "Cuentas"]);
+  it("has the four main destinations", () => {
+    expect(navItems.map((i) => i.label)).toEqual(["Inicio", "Movimientos", "Cuentas", "Análisis"]);
   });
 
   it("keeps transfers and categories out of the main navigation", () => {
@@ -59,7 +59,7 @@ describe("navItems", () => {
   });
 
   it("highlights exactly one destination on every known route", () => {
-    for (const route of ["/dashboard", "/transactions", "/transfers", "/accounts"]) {
+    for (const route of ["/dashboard", "/transactions", "/transfers", "/accounts", "/analysis"]) {
       expect(navItems.filter((i) => isItemActive(route, i))).toHaveLength(1);
     }
     // Categories belong to Ajustes, not to the main navigation.

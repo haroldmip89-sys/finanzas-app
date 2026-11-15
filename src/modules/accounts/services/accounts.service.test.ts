@@ -340,4 +340,138 @@ describe("accounts service", () => {
       expect(error.message).toMatch(/Archívala/);
     });
   });
+
+  describe("cardSpending", () => {
+    const NOW = new Date("2026-11-15T15:00:00Z"); // Nov 2026 in Lima
+
+    async function expense(
+      accountId: string,
+      cents: number,
+      date: string,
+      userId = USER_A,
+      systemKey: string | null = null,
+      kind: "income" | "expense" = "expense",
+    ) {
+      const [category] = await t.db
+        .insert(categories)
+        .values({
+          userId,
+          kind,
+          name: `c-${Math.random().toString(36).slice(2)}`,
+          systemKey: systemKey as "adjustment_expense" | "adjustment_income" | null,
+        })
+        .returning();
+      await t.db.insert(transactions).values({
+        userId,
+        accountId,
+        categoryId: category.id,
+        type: kind,
+        amountCents: cents,
+        date,
+      });
+    }
+
+    async function setupCard(userId = USER_A, name = "Visa") {
+      return service.create(userId, { name, type: "card", initialBalanceCents: 0 });
+    }
+
+    it("is zero without cards or purchases", async () => {
+      await service.create(USER_A, cash);
+
+      expect(await service.cardSpending(USER_A, NOW)).toEqual({
+        currentMonthCents: 0,
+        previousMonthCents: 0,
+      });
+    });
+
+    it("sums this month and last month separately", async () => {
+      const card = await setupCard();
+      await expense(card.id, 10000, "2026-11-03");
+      await expense(card.id, 2500, "2026-11-14");
+      await expense(card.id, 7000, "2026-10-20");
+
+      expect(await service.cardSpending(USER_A, NOW)).toEqual({
+        currentMonthCents: 12500,
+        previousMonthCents: 7000,
+      });
+    });
+
+    it("includes the first and last day of each month and nothing outside", async () => {
+      const card = await setupCard();
+      await expense(card.id, 1, "2026-11-01");
+      await expense(card.id, 2, "2026-11-30");
+      await expense(card.id, 4, "2026-10-01");
+      await expense(card.id, 8, "2026-10-31");
+      await expense(card.id, 1000, "2026-09-30");
+      await expense(card.id, 2000, "2026-12-01");
+
+      expect(await service.cardSpending(USER_A, NOW)).toEqual({
+        currentMonthCents: 3,
+        previousMonthCents: 12,
+      });
+    });
+
+    it("adds up several cards", async () => {
+      const visa = await setupCard(USER_A, "Visa");
+      const master = await setupCard(USER_A, "Master");
+      await expense(visa.id, 1000, "2026-11-05");
+      await expense(master.id, 500, "2026-11-06");
+
+      expect((await service.cardSpending(USER_A, NOW)).currentMonthCents).toBe(1500);
+    });
+
+    it("ignores spending on accounts that are not cards", async () => {
+      const bank = await service.create(USER_A, { ...cash, name: "BBVA", type: "bank" });
+      const card = await setupCard();
+      await expense(bank.id, 9999, "2026-11-05");
+      await expense(card.id, 100, "2026-11-05");
+
+      expect((await service.cardSpending(USER_A, NOW)).currentMonthCents).toBe(100);
+    });
+
+    it("ignores income and balance adjustments on a card", async () => {
+      const card = await setupCard();
+      await expense(card.id, 5000, "2026-11-05", USER_A, null, "income");
+      await expense(card.id, 3000, "2026-11-06", USER_A, "adjustment_expense");
+      await expense(card.id, 200, "2026-11-07");
+
+      expect((await service.cardSpending(USER_A, NOW)).currentMonthCents).toBe(200);
+    });
+
+    it("does not count card payments (transfers) as purchases", async () => {
+      const card = await setupCard();
+      const bank = await service.create(USER_A, { ...cash, name: "BBVA", type: "bank", initialBalanceCents: 50000 });
+      await t.db.insert(transfers).values({
+        userId: USER_A,
+        fromAccountId: bank.id,
+        toAccountId: card.id,
+        amountCents: 20000,
+        date: "2026-11-10",
+      });
+      await expense(card.id, 300, "2026-11-11");
+
+      expect((await service.cardSpending(USER_A, NOW)).currentMonthCents).toBe(300);
+    });
+
+    it("keeps the month of Lima near the month boundary", async () => {
+      const card = await setupCard();
+      await expense(card.id, 700, "2026-11-30");
+      await expense(card.id, 100, "2026-12-01");
+
+      // 02:00 UTC on Dec 1st is still Nov 30th in Lima.
+      const result = await service.cardSpending(USER_A, new Date("2026-12-01T02:00:00Z"));
+
+      expect(result.currentMonthCents).toBe(700);
+    });
+
+    it("never counts another user's purchases", async () => {
+      const mine = await setupCard(USER_A, "Mia");
+      const theirs = await setupCard(USER_B, "Suya");
+      await expense(mine.id, 400, "2026-11-05");
+      await expense(theirs.id, 99999, "2026-11-05", USER_B);
+
+      expect((await service.cardSpending(USER_A, NOW)).currentMonthCents).toBe(400);
+      expect((await service.cardSpending(USER_B, NOW)).currentMonthCents).toBe(99999);
+    });
+  });
 });

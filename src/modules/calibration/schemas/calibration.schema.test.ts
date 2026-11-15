@@ -53,3 +53,19 @@ describe("toCalibrationInput", () => {
     expect(toCalibrationInput({ accountId: ACCOUNT, realBalance: "-150" }).realBalanceCents).toBe(-15000);
   });
 });
+
+describe("toCalibrationInput for cards", () => {
+  it("sends a typed debt as a negative balance", () => {
+    expect(toCalibrationInput({ accountId: ACCOUNT, realBalance: "350.50" }, { isCard: true }).realBalanceCents).toBe(-35050);
+  });
+
+  it("sends zero debt as 0 without a negative zero", () => {
+    const cents = toCalibrationInput({ accountId: ACCOUNT, realBalance: "0" }, { isCard: true }).realBalanceCents;
+    expect(cents).toBe(0);
+    expect(Object.is(cents, -0)).toBe(false);
+  });
+
+  it("keeps the sign for normal accounts", () => {
+    expect(toCalibrationInput({ accountId: ACCOUNT, realBalance: "350.50" }, { isCard: false }).realBalanceCents).toBe(35050);
+  });
+});
