@@ -21,7 +21,7 @@ export function TransfersPage() {
   const m = useTransfersManager();
 
   const createButton = (
-    <Button onClick={m.openCreate} className="min-h-11 w-full sm:min-h-8 sm:w-auto">
+    <Button onClick={m.openCreate} className="w-full sm:w-auto">
       <Plus data-icon="inline-start" />
       Nueva transferencia
     </Button>
@@ -66,7 +66,7 @@ export function TransfersPage() {
           }
           action={
             m.isFiltered ? (
-              <Button variant="outline" onClick={m.resetFilters} className="min-h-11 sm:min-h-8">
+              <Button variant="outline" onClick={m.resetFilters}>
                 Limpiar filtros
               </Button>
             ) : (

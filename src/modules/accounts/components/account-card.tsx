@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { ResourceCard, type ResourceAction } from "@/components/shared/resource-card";
 import { formatPen } from "@/lib/money";
-import { cn } from "@/lib/utils";
 
 import { isCreditAccount } from "../account-kind";
 import { describeDebt } from "../card-summary";
@@ -21,8 +20,8 @@ type AccountCardProps = {
 function DebtValue({ balanceCents }: { balanceCents: number }) {
   const debt = describeDebt(balanceCents);
   if (debt.kind === "none") return <span className="text-muted-foreground">Sin deuda</span>;
-  if (debt.kind === "credit") return <span>A favor {formatPen(debt.cents)}</span>;
-  return <span className={cn("text-destructive")}>Deuda {formatPen(debt.cents)}</span>;
+  if (debt.kind === "credit") return <span className="text-income">A favor {formatPen(debt.cents)}</span>;
+  return <span className="text-debt">Deuda {formatPen(debt.cents)}</span>;
 }
 
 export function AccountCard({

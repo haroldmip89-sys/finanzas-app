@@ -22,7 +22,6 @@ export function PaginationNav({
       <Button
         type="button"
         variant="outline"
-        className="min-h-11 sm:min-h-8"
         disabled={disabled || page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
@@ -35,7 +34,6 @@ export function PaginationNav({
       <Button
         type="button"
         variant="outline"
-        className="min-h-11 sm:min-h-8"
         disabled={disabled || page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >

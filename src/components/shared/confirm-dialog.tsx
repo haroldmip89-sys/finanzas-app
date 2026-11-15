@@ -47,7 +47,6 @@ export function ConfirmDialog({
           <Button
             type="button"
             variant="outline"
-            className="min-h-11 sm:min-h-8"
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
@@ -56,7 +55,6 @@ export function ConfirmDialog({
           <Button
             type="button"
             variant={destructive ? "destructive" : "default"}
-            className="min-h-11 sm:min-h-8"
             onClick={onConfirm}
             disabled={pending}
           >

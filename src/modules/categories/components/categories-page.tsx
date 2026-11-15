@@ -21,7 +21,7 @@ export function CategoriesPage() {
   const m = useCategoriesManager();
 
   const createButton = (
-    <Button onClick={m.openCreate} className="min-h-11 w-full sm:min-h-8 sm:w-auto">
+    <Button onClick={m.openCreate} className="w-full sm:w-auto">
       <Plus data-icon="inline-start" />
       Nueva categoría
     </Button>

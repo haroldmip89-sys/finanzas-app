@@ -22,7 +22,7 @@ export function TransactionsPage() {
   const m = useTransactionsManager();
 
   const createButton = (
-    <Button onClick={m.openCreate} className="min-h-11 w-full sm:min-h-8 sm:w-auto">
+    <Button onClick={m.openCreate} className="w-full sm:w-auto">
       <Plus data-icon="inline-start" />
       Nueva transacción
     </Button>
@@ -70,7 +70,7 @@ export function TransactionsPage() {
           }
           action={
             m.isFiltered ? (
-              <Button variant="outline" onClick={m.resetFilters} className="min-h-11 sm:min-h-8">
+              <Button variant="outline" onClick={m.resetFilters}>
                 Limpiar filtros
               </Button>
             ) : (

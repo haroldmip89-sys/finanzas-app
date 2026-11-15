@@ -23,7 +23,7 @@ export function ThemeToggle() {
             variant="outline"
             size="icon"
             aria-label="Cambiar tema"
-            className="size-11 md:size-8"
+           
           />
         }
       >

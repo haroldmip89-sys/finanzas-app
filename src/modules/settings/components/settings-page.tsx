@@ -14,18 +14,18 @@ export function SettingsPage() {
           <li key={href} className="min-w-0">
             <Link
               href={href}
-              className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="flex min-h-11 items-center gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/12 text-primary dark:bg-primary/15">
                 <Icon aria-hidden="true" className="size-5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">{title}</span>
-                <span className="block truncate text-sm text-muted-foreground">
+                <span className="block truncate text-[15px] font-semibold">{title}</span>
+                <span className="block truncate text-[13px] text-muted-foreground">
                   {description}
                 </span>
               </span>
-              <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+              <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
             </Link>
           </li>
         ))}

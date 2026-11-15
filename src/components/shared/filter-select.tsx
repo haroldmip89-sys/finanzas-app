@@ -40,7 +40,7 @@ export function FilterSelect({
         value={value || ALL}
         onValueChange={(next) => onChange(next === ALL || next === null ? "" : next)}
       >
-        <SelectTrigger id={id} className="h-11 w-full md:h-8">
+        <SelectTrigger id={id} className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

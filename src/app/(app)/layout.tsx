@@ -16,9 +16,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <QueryProvider>
       <QuickAddProvider>
         <div className="min-h-dvh bg-background text-foreground">
+          <a
+            href="#contenido"
+            className="sr-only z-50 rounded-xl bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+          >
+            Saltar al contenido
+          </a>
           <AppSidebar />
           <TopBar />
-          <main className="mx-auto w-full max-w-6xl px-4 py-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:ml-60 md:max-w-none md:px-8 md:pb-8">
+          <main id="contenido" className="mx-auto w-full max-w-6xl px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:ml-22 md:max-w-none md:px-6 md:pb-8 lg:ml-58 lg:px-8">
             {children}
           </main>
           <BottomNav />

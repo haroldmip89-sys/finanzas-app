@@ -12,14 +12,14 @@ type FormFieldProps = {
 
 export function FormField({ label, htmlFor, error, hint, children }: FormFieldProps) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
       {hint && !error && (
-        <p className="text-xs text-muted-foreground">{hint}</p>
+        <p className="text-[13px] text-muted-foreground">{hint}</p>
       )}
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-[13px] font-medium text-destructive">
           {error}
         </p>
       )}

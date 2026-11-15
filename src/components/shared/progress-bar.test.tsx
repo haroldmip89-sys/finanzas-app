@@ -28,11 +28,19 @@ describe("ProgressBar", () => {
     expect(inner.style.width).toBe("55%");
   });
 
-  it("uses the destructive token only when over", () => {
+  it("uses the expense token only when over", () => {
     const { rerender } = render(<ProgressBar value={100} label="x" tone="over" />);
-    expect((screen.getByRole("progressbar").firstElementChild as HTMLElement).className).toContain("bg-destructive");
+    expect((screen.getByRole("progressbar").firstElementChild as HTMLElement).className).toContain("bg-expense");
 
     rerender(<ProgressBar value={100} label="x" />);
     expect((screen.getByRole("progressbar").firstElementChild as HTMLElement).className).toContain("bg-primary");
+  });
+
+  it("paints warning and success states with their own tokens", () => {
+    const { rerender } = render(<ProgressBar value={80} label="x" tone="warning" />);
+    expect((screen.getByRole("progressbar").firstElementChild as HTMLElement).className).toContain("bg-warning");
+
+    rerender(<ProgressBar value={30} label="x" tone="success" />);
+    expect((screen.getByRole("progressbar").firstElementChild as HTMLElement).className).toContain("bg-success");
   });
 });

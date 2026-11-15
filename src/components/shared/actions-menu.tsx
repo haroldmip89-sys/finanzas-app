@@ -32,7 +32,7 @@ export function ActionsMenu({ actions, label }: ActionsMenuProps) {
             variant="ghost"
             size="icon"
             aria-label={label}
-            className="size-11 md:size-8"
+            className="text-muted-foreground"
           />
         }
       >

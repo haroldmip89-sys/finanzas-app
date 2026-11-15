@@ -61,7 +61,6 @@ function CategoryForm({ category, defaultKind, onClose }: CategoryFormProps) {
           autoFocus
           autoComplete="off"
           aria-invalid={Boolean(errors.name)}
-          className="h-11 md:h-8"
           {...form.register("name")}
         />
       </FormField>
@@ -77,7 +76,7 @@ function CategoryForm({ category, defaultKind, onClose }: CategoryFormProps) {
               onValueChange={field.onChange}
               disabled={isEditing}
             >
-              <SelectTrigger id="category-kind" className="h-11 w-full md:h-8">
+              <SelectTrigger id="category-kind" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -118,13 +117,12 @@ function CategoryForm({ category, defaultKind, onClose }: CategoryFormProps) {
         <Button
           type="button"
           variant="outline"
-          className="min-h-11 sm:min-h-8"
           onClick={onClose}
           disabled={isPending}
         >
           Cancelar
         </Button>
-        <Button type="submit" className="min-h-11 sm:min-h-8" disabled={isPending}>
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Guardando..." : "Guardar"}
         </Button>
       </DialogFooter>

@@ -6,15 +6,15 @@ import { Button } from "@/components/ui/button";
 
 import { QuickAddMenu } from "./quick-add-menu";
 
-/** "Nuevo" button for the desktop sidebar. */
+/** "Nuevo" button for the sidebar: icon only in the rail, labelled from 1024 px. */
 export function QuickAddNewButton() {
   return (
     <QuickAddMenu
       align="start"
       trigger={
-        <Button className="w-full">
+        <Button aria-label="Nuevo" className="w-full">
           <Plus data-icon="inline-start" />
-          Nuevo
+          <span className="hidden lg:inline">Nuevo movimiento</span>
         </Button>
       }
     />

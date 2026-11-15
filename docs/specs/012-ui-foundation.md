@@ -1,105 +1,123 @@
-# Base visual (implementación del diseño del artifact)
+# Base visual Yupi! (implementación del diseño)
 
-Estado: borrador
+Estado: hecha (falta tu revisión manual con sesión, AC11)
 
 ## Objetivo
 
-Aplicar a la app un **sistema visual propio** (colores, tipografía, espaciado, componentes y pantallas) diseñado fuera del repositorio con Artifact Design, **sin cambiar el comportamiento**: ni reglas de negocio, ni datos, ni hooks, ni rutas. Es la primera fase de la spec 012 del roadmap (`docs/BRIEF.md §10`) y se hace antes de presupuestos y dashboard para que esas pantallas nazcan ya con el estilo nuevo.
+Aplicar a la app el **sistema visual Yupi!** diseñado con Artifact Design (violeta sereno, superficies azuladas, colores semánticos para el dinero), **sin cambiar el comportamiento**: ni reglas de negocio, ni datos, ni hooks, ni rutas. Se hace antes del dashboard (009) para que nazca con el estilo nuevo. Se sigue el diseño con fidelidad en tokens, componentes y estructura de pantallas; no hace falta que cada píxel sea idéntico.
 
-Esta spec se escribió **antes** del diseño, así que define el proceso, las entradas que espera, los límites y cómo se verifica. Cuando llegue el diseño, se completa la sección "Diseño recibido" y se pasa a aprobación; recién entonces se implementa.
+Referencias:
 
-Referencias: `docs/design/artifact-design-prompt.md` (lo que se le pidió al diseñador), `docs/BRIEF.md §3, §8, §14`, `docs/SETUP.md §2` (tokens semánticos, sin colores fijos).
+- Diseño: https://claude.ai/artifact/5xiYtwn7ZZxMicKzg2NSRJ (16 artboards, `project/*.dc.html`).
+- Entrega en el repo: `docs/design/handoff/README.md` (reglas) y `docs/design/handoff/yupi-tokens.css` (tokens listos para pegar).
+- Icono y nombre de marca: `docs/design/63692.png`, `src/lib/site.ts` (hecho).
+- Reglas de código: `docs/SETUP.md §2`.
 
-## Entrada esperada del diseño (handoff)
+## Diseño recibido
 
-El diseño se guarda en `docs/design/handoff/` o se entrega como enlace de un artifact publicado (que se lee con la herramienta de artifacts). Debe traer, según el prompt:
+Versión del canvas `1794741421-421a`. Contenido:
 
-1. Tokens de color en OKLCH para `:root` y `.dark`, con los nombres de shadcn y los tokens nuevos propuestos (ingreso, gasto, advertencia, éxito, información), con la relación de contraste de cada par de uso.
-2. Escala tipográfica (Plus Jakarta Sans fija), reglas de cifras tabulares, espaciado, radios y sombras.
-3. Especificación de cada componente con todos sus estados.
-4. Pantallas en 360, 768 y 1280 px, en claro y oscuro.
-5. Movimiento (con versión de movimiento reducido), accesibilidad y decisiones abiertas.
+| Artboard | Qué define |
+|---|---|
+| Fundamentos | Tokens OKLCH y hex con contraste (claro y oscuro), escala tipográfica, espaciado, radios, sombras, movimiento, accesibilidad |
+| Componentes | Botón, campos, select/menú/switch, pestañas, etiquetas, tarjeta de recurso, tarjeta de cifra, progreso, cabecera y paginación, vacío/error/toast/esqueleto, navegación |
+| Móvil 360 (oscuro) | Login, Inicio, Movimientos, Cuentas, Categorías y Ajustes, Presupuestos |
+| Formularios | Nueva transacción (bottom sheet), transferencia, pagar tarjeta, calibrar saldo, nueva cuenta, nueva categoría |
+| Estados | Carga, vacío, error y toast |
+| Tema claro | Inicio, Movimientos, Cuentas y Nueva transacción en claro |
+| Escritorio 1280 / tablet 768 | Login, Inicio, Movimientos, Cuentas |
 
-Si falta algo de esto, se pide antes de implementar; no se inventa.
+Puntos del diseño que **ya existen en la app** y solo se restilan: login con carrusel, Movimientos con pestañas Transacciones/Transferencias, Cuentas con tarjetas de crédito y menú de acciones, Categorías, Ajustes, bottom sheets, Presupuestos (spec 008, ruta `/analysis`).
+
+Puntos del diseño que **todavía no existen** y quedan fuera (se implementan en su spec con este sistema visual): "Dinero disponible" y "¿Cómo se calculó?" (009a), "Próximas obligaciones", "Comportamiento de consumo", "Compras impulsivas evitadas" y gráfico de gastos por categoría (009 / P1). En Inicio solo se restila lo que hoy existe (acciones rápidas y lo que haya) dejando la estructura lista.
 
 ## Alcance
 
 - Incluye:
-  - Tokens de color, radios y sombras en `src/app/globals.css` (claro y oscuro), incluidos los tokens semánticos nuevos y la paleta de gráficos.
-  - Escala tipográfica y reglas de cifras tabulares (clases o utilidades compartidas).
-  - Restilado de los componentes de `src/components/ui/*` y de `src/components/shared/*` según el diseño.
-  - Navegación: barra inferior, botón flotante "+", menú lateral, barra superior, pestañas de Movimientos.
-  - Restilado de las pantallas existentes: login y registro, Inicio, Movimientos (transacciones y transferencias), Cuentas, Categorías, Ajustes y todos los formularios, diálogos y bottom sheets.
-  - Estados de carga, vacío, error y toasts con el estilo nuevo.
-  - Los componentes de Clerk siguen el tema (el tema `shadcn` de `@clerk/ui` lee los tokens).
+  - Tokens de `docs/design/handoff/yupi-tokens.css` en `src/app/globals.css` (claro y oscuro), con los tokens nuevos (`income`, `expense`, `debt`, `warning`, `success`, `info` y sus `-foreground`) expuestos a Tailwind; `--radius: 0.875rem`; `tabular-nums` en `body`.
+  - Escala tipográfica del diseño aplicada con clases (sin tokens nuevos de fuente: Plus Jakarta Sans y Geist Mono ya cargadas).
+  - Restilado de `src/components/ui/*` y `src/components/shared/*`: botón (default `h-11`, `active:scale-[.97]`, estado cargando), campos `h-11 rounded-xl`, tabs (segmentado y subrayado), badges (incluye "Estimado" punteado y "Ajuste"), tarjeta de recurso, tarjeta de cifra, barra de progreso con estados, diálogo y bottom sheet, toast, esqueleto, vacío, error.
+  - Navegación: barra inferior de 5 posiciones con FAB central, menú lateral (≥1024 px), rail (768 px), barra superior, enlace "Saltar al contenido".
+  - Pantallas existentes: login/registro, Inicio, Movimientos (ambas pestañas), Cuentas, Categorías, Ajustes, Presupuestos y todos los formularios, diálogos y bottom sheets.
+  - Importes: signo siempre, gastos en `foreground`, ingresos en `income`, deuda en `debt`, ajustes con badge; `aria-label` tipo "Gasto de 18.50 soles".
+  - Movimiento con versión `prefers-reduced-motion` según la tabla del diseño.
+  - Componentes de Clerk con el tema (variables; si no aceptan `oklch()`, los hex del handoff).
 - No incluye:
-  - Cambiar la arquitectura de información, los textos funcionales, las reglas ni la lógica.
-  - Construir presupuestos, dinero disponible, compras evitadas o el dashboard completo: se implementan en sus propias specs, usando el sistema visual de esta.
-  - Cambiar la tipografía base ni el tema oscuro por defecto.
-  - Librerías nuevas de íconos, gráficos o animación, salvo que el diseño las justifique y el usuario las apruebe.
-  - Cambios en la base de datos o migraciones.
+  - Cambiar arquitectura de información, textos funcionales, reglas o lógica.
+  - Construir dinero disponible, obligaciones, consumo, compras evitadas ni gráficos (specs propias).
+  - Librerías nuevas de íconos, gráficos o animación (se sigue con `lucide-react`; los íconos del diseño son equivalentes).
+  - Cambios en base de datos, servicios, acciones, hooks o esquema.
+
+## Decisiones tomadas (con mi recomendación; cambian si me indicas otra)
+
+1. **Logotipo:** se usa el icono real `63692.png` ("Yupi!") en login y menú lateral, en vez del isotipo provisional "Y!". Nombre de marca "Yupi!".
+2. **Teclado del monto:** teclado del sistema con `inputmode="decimal"` (como propone el diseño y ya hace `MoneyInput`).
+3. **Umbrales de presupuesto:** hoy la app usa su propia lógica (spec 008); se **mantiene** y solo cambian los colores a `success` / `warning` / `expense`. Cualquier cambio de umbral va aparte.
+4. **Fórmula de dinero disponible:** no se implementa aquí; se confirma en 009a.
+5. **Imágenes del carrusel de login:** se mantienen las 3 provisionales.
+6. **Altura del botón:** `h-11` en móvil y `h-10` desde `md`, según la propuesta del diseño.
+7. **Deuda (rosa) vs gasto (coral):** se acepta el diseño; la deuda siempre lleva además la palabra "Deuda".
+8. **Navegación móvil (decisión tuya, ver abajo):** el diseño usa 5 posiciones (Inicio, Movimientos, "+", Cuentas, Ajustes). La app hoy tiene Presupuestos (`/analysis`) como 4.º destino y Ajustes aparte. Recomendación: **seguir el diseño** (Ajustes en la barra) y llegar a Presupuestos desde una tarjeta "Presupuesto" en Inicio y desde el menú lateral de escritorio (4.º destino); Categorías sigue colgando de Ajustes.
 
 ## Reglas de implementación
 
-- Los colores solo viven como variables en `globals.css`; los componentes usan clases semánticas. No se añaden colores fijos.
-- Los componentes se restilan **sin cambiar sus props ni su API pública**, para que los hooks y los tests existentes sigan funcionando. Si el diseño exige cambiar una API, se anota y se aprueba aparte.
-- Orden de trabajo: tokens → tipografía → componentes `ui` → componentes `shared` → navegación → pantallas → pulido. Cada paso se verifica antes del siguiente.
-- Las pantallas se comparan con el diseño a 360, 768 y 1280 px, en claro y oscuro.
-- Lección ya aprendida: en cuadrículas, los elementos con texto largo necesitan `min-w-0` para que `truncate` funcione; los iconos pasan de servidor a cliente como elementos ya renderizados, no como componentes.
-- Cualquier cambio de un archivo generado por shadcn (`src/components/ui/*`) se hace a mano y queda anotado en la spec, porque la CLI no lo vuelve a generar sin sobrescribir.
-
-## Diseño recibido
-
-(Se completa cuando llegue el artifact: enlace o carpeta, versión, decisiones abiertas resueltas y cualquier excepción aprobada.)
+- Los colores solo viven como variables en `globals.css`; los componentes usan clases semánticas. No se añaden colores fijos. Fondos suaves con opacidad (`bg-income/15` en oscuro, `/12` en claro).
+- Los componentes se restilan **sin cambiar props ni API pública**, para que hooks y tests sigan funcionando.
+- Orden: tokens → tipografía → `ui` → `shared` → navegación → pantallas → estados y movimiento. Cada paso se verifica antes del siguiente.
+- Cada pantalla se compara con el diseño a 360, 768 y 1280 px, en claro y oscuro, usando la técnica de página temporal (se borra después).
+- En cuadrículas, `min-w-0` en los elementos con texto largo; los íconos pasan de servidor a cliente como elementos ya renderizados.
+- Todo cambio a un archivo de shadcn en `src/components/ui/*` se hace a mano y se anota al final de esta spec.
 
 ## Archivos (previstos)
 
-- `src/app/globals.css`, `src/app/layout.tsx` (solo si cambian las fuentes o clases globales)
-- `src/components/ui/*` y `src/components/shared/*` (restilado)
-- `src/modules/shell/components/*`, `src/modules/quick-add/components/*` (navegación y botón flotante)
-- Componentes de presentación de `accounts`, `categories`, `transactions`, `transfers`, `calibration`, `settings` y `auth` (solo clases y estructura visual)
-- `docs/design/handoff/*` (el diseño recibido)
-- `docs/BRIEF.md` (estado del roadmap) y `docs/architecture/system-design.md` solo si se añaden tokens que convenga documentar
+- `src/app/globals.css`, `src/app/layout.tsx` (solo si cambian clases globales o `viewport.themeColor`).
+- `src/components/ui/*`, `src/components/shared/*`.
+- `src/modules/shell/*` (barra inferior, menú lateral, rail, barra superior, `nav-items.ts`), `src/modules/quick-add/components/*`.
+- Componentes de presentación de `auth`, `accounts`, `categories`, `transactions`, `transfers`, `calibration`, `budgets`, `settings` (solo clases y estructura visual).
+- `docs/BRIEF.md` (estado del roadmap).
 
 ## Criterios de aceptación
 
-- AC1: los tokens de color de `globals.css` coinciden con los del diseño, en claro y oscuro, e incluyen los tokens semánticos nuevos; no hay colores fijos en componentes (se comprueba con una búsqueda de hex, `rgb(` y paletas de Tailwind).
-- AC2: los pares de texto y fondo cumplen contraste AA (4.5:1 texto normal, 3:1 texto grande y componentes) en ambos temas, comprobados con una herramienta de contraste sobre los valores finales.
-- AC3: cada componente de `ui` y `shared` implementa los estados del diseño (normal, hover, foco visible, activo, deshabilitado, cargando, error cuando aplique).
-- AC4: cada pantalla coincide con el diseño a 360, 768 y 1280 px, en claro y oscuro, sin scroll horizontal y con destinos táctiles de al menos 44 px.
-- AC5: la navegación (barra inferior, botón flotante, menú lateral, barra superior, pestañas de Movimientos) y los bottom sheets respetan el diseño y el área segura del teléfono.
-- AC6: los importes usan cifras tabulares y el formato `S/ 1,234.50`; los ingresos, gastos, deuda, saldo a favor y ajustes se distinguen con los tokens semánticos y también por texto o signo, no solo por color.
-- AC7: con `prefers-reduced-motion` las transiciones se reducen o desaparecen como indica el diseño.
-- AC8: los componentes de Clerk (login, registro, menú de usuario) se ven coherentes con el tema, en claro y oscuro.
-- AC9: **no cambia ningún comportamiento**: los tests existentes pasan sin modificarse (salvo selectores de texto si cambia un texto con aprobación), y no se tocan servicios, acciones, hooks ni esquema.
+- AC1: los tokens de `globals.css` coinciden con `yupi-tokens.css` en claro y oscuro, incluidos los semánticos nuevos; no hay colores fijos en componentes (búsqueda de hex, `rgb(` y paletas de Tailwind).
+- AC2: contraste AA en ambos temas con los valores finales (los del handoff ya lo cumplen; excepciones documentadas: `--border` decorativo y `chart-2/3` claros con leyenda).
+- AC3: cada componente `ui` y `shared` implementa normal, hover, foco visible, activo, deshabilitado, cargando y error donde aplique.
+- AC4: cada pantalla coincide con el diseño a 360, 768 y 1280 px, claro y oscuro, sin scroll horizontal y con destinos táctiles ≥ 44 px.
+- AC5: navegación (barra inferior con FAB, menú lateral, rail, barra superior, pestañas de Movimientos) y bottom sheets respetan el diseño y el área segura; desde 640 px el sheet es diálogo.
+- AC6: importes con cifras tabulares, formato `S/ 1,234.50`, signo y `aria-label`; ingreso, gasto, deuda, saldo a favor y ajuste se distinguen por token y también por texto o signo.
+- AC7: con `prefers-reduced-motion` las transiciones se reducen según la tabla del diseño.
+- AC8: login, registro y menú de usuario de Clerk coherentes con el tema en claro y oscuro.
+- AC9: no cambia comportamiento: los tests existentes pasan sin modificarse (salvo selectores de texto si un texto cambia con tu aprobación); no se tocan servicios, acciones, hooks ni esquema.
 - AC10: `npm run lint`, `npm run test` y `npm run build` pasan.
-- AC11 (manual, con sesión): recorrido completo en móvil y escritorio, en claro y oscuro: crear un gasto desde el botón "+", una transferencia, un pago de tarjeta y una calibración; filtrar movimientos; abrir Ajustes y Categorías.
+- AC11 (manual, con sesión): recorrido en móvil y escritorio, claro y oscuro: gasto desde "+", transferencia, pago de tarjeta, calibración, filtrar movimientos, Ajustes, Categorías y Presupuestos.
 
 ## Tests requeridos
 
-- Los tests existentes (452 al escribir esta spec) deben seguir pasando; son la red de seguridad de que no cambió el comportamiento.
-- Prueba de integración existente de `quick-add` (formularios, botón flotante, menú): sin cambios.
-- Comprobaciones automáticas ligeras si el diseño trae reglas verificables: por ejemplo, que `globals.css` defina todos los tokens que usan los componentes en `:root` y en `.dark` (un test que lee el CSS y compara conjuntos de nombres).
-- Lo visual y el contraste se verifican manualmente con el navegador y la herramienta de contraste, con la técnica de página temporal para el ancho de 360 px.
+- Los tests existentes (547 al último recuento) siguen pasando: son la red de seguridad.
+- Test ligero que lee `globals.css` y comprueba que `:root` y `.dark` definen el mismo conjunto de tokens, incluidos los semánticos nuevos.
+- Test de `nav-items` actualizado si cambia la lista de destinos (decisión 8).
+- Lo visual y el contraste se verifican en navegador con páginas temporales; la parte con sesión la revisas tú.
 
-## Orden de implementación
+## Tandas de implementación
 
-1. Recibir y revisar el diseño; completar "Diseño recibido" y las decisiones abiertas con el usuario; aprobación de esta spec.
-2. Tokens, tipografía y utilidades.
-3. Componentes `ui` y `shared`.
-4. Navegación, botón flotante y bottom sheets.
-5. Pantallas, una por una: login, Inicio, Movimientos, Cuentas, Categorías, Ajustes, formularios.
-6. Estados (carga, vacío, error, toasts) y movimiento reducido.
-7. Lint, tests, build, comprobación de contraste y recorrido manual.
+1. **Tanda 1 – base:** tokens, tipografía, `ui` y `shared`. Cambia toda la app a la vez; se revisa antes de seguir.
+2. **Tanda 2 – navegación y sheets:** barra inferior con FAB, menú lateral, rail, barra superior, bottom sheet/diálogo, toasts.
+3. **Tanda 3 – pantallas:** login/registro, Inicio, Movimientos, Cuentas, luego Categorías, Ajustes y Presupuestos, y todos los formularios.
+4. **Tanda 4 – estados y pulido:** carga, vacío, error, movimiento reducido, Clerk, lint/test/build.
 
 ## Preguntas abiertas
 
-1. **¿Quién implementa qué?** Se propone que el diseñador entregue el artifact y yo lo implemente en el repositorio, pantalla por pantalla, con tu revisión en cada tanda.
-2. **Alcance de la primera tanda.** Se propone empezar por tokens y componentes compartidos (cambian toda la app a la vez) y luego las pantallas en orden de uso: Inicio y registro rápido, Movimientos, Cuentas.
-3. **Pantallas futuras** (dinero disponible, presupuestos, compras evitadas): se diseñan ahora, pero se implementan en sus specs.
-4. **Revisión.** Esta spec no toca dinero ni datos; se propone no usar el `reviewer`.
+1. **Navegación móvil (decisión 8):** ¿sigo el diseño (Ajustes en la barra, Presupuestos desde Inicio y menú lateral) o prefieres mantener Presupuestos como destino de la barra?
+2. **Revisión:** la spec no toca dinero ni datos; propongo no usar el `reviewer`.
 
 ## Próximas fases
 
-- 008: presupuestos y 009a / 009: dinero disponible y dashboard, implementados ya con el sistema visual de esta spec.
-- 011: PWA (iconos y colores de tema del sistema visual).
+- 009a / 009: dinero disponible y dashboard, ya con este sistema visual.
+- 011: PWA (iconos y color de tema del sistema visual).
+
+## Notas de implementación
+
+- Archivos de shadcn editados a mano: `button`, `input`, `badge` (variantes `income`, `expense`, `debt`, `warning`, `success`, `info`), `tabs`, `dialog` (asa del sheet, sheet hasta 640 px, "Cerrar"), `select`, `dropdown-menu`, `switch`, `skeleton`, `alert`, `sonner`. La CLI no debe sobrescribirlos.
+- Nuevo: `BrandLogo`, `public/yupi-logo.png`, enlace "Saltar al contenido", `ProgressBar` con tonos `success` / `warning` / `over` (gasto en `expense`), test de tokens `src/app/globals.test.ts`.
+- Un test existente cambió de assert (progress-bar: token `bg-expense` en vez de `bg-destructive`, por el diseño) y se añadió otro de estados.
+- Navegación móvil: 5 posiciones; Presupuestos se alcanza desde Inicio (tarjeta) y el menú lateral. El botón "+" sigue oculto en Inicio (test existente), así que ahí queda libre el hueco central de la barra.
+- Verificado en navegador con página temporal (borrada): 360 px y 1280 px, oscuro y claro. Sin verificar: pantallas con sesión, 768 px, bottom sheets abiertos, componentes de Clerk.

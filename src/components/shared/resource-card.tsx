@@ -36,20 +36,20 @@ export function ResourceCard({
       className={cn(
         // min-w-0: as a grid item the card must be allowed to shrink below its text,
         // otherwise `truncate` never applies and the page overflows on mobile.
-        "flex min-w-0 items-center gap-3 rounded-xl border border-border bg-card p-4 text-card-foreground",
+        "flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-card p-4 pr-2 text-card-foreground",
         archived && "opacity-60",
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/12 text-primary dark:bg-primary/15">
         <Icon aria-hidden="true" className="size-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{title}</p>
+        <p className="truncate text-[15px] font-semibold">{title}</p>
         {subtitle && (
-          <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
+          <p className="truncate text-[13px] text-muted-foreground">{subtitle}</p>
         )}
       </div>
-      {value && <p className="shrink-0 font-semibold tabular-nums">{value}</p>}
+      {value && <p className="shrink-0 text-[17px] font-bold tabular-nums">{value}</p>}
       {badge}
       <ActionsMenu actions={actions} label={menuLabel} />
     </li>

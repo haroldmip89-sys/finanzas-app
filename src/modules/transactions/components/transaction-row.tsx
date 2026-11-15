@@ -35,12 +35,12 @@ export function TransactionRow({ transaction, onEdit, onDelete }: TransactionRow
       title={transaction.categoryName}
       subtitle={details.join(" · ")}
       value={
-        <span className={cn(isExpense && "text-destructive")}>
+        <span className={cn(!isExpense && "text-income")}>
           {isExpense ? "−" : "+"}
           {formatPen(transaction.amountCents)}
         </span>
       }
-      badge={transaction.isAdjustment ? <Badge variant="secondary">Ajuste</Badge> : undefined}
+      badge={transaction.isAdjustment ? <Badge variant="outline">Ajuste</Badge> : undefined}
       actions={actions}
       menuLabel={`Acciones de ${transaction.categoryName} del ${formatDate(transaction.date)}`}
     />

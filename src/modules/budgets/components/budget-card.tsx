@@ -25,6 +25,8 @@ function statusText(state: BudgetState, remainingCents: number): string {
   }
 }
 
+const TONE = { ok: "success", near: "warning", over: "over" } as const;
+
 export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
   const status = getBudgetStatus(budget.amountCents, budget.spentCents);
   const actions: ResourceAction[] = [
@@ -34,14 +36,14 @@ export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
 
   return (
     // min-w-0: grid item that must shrink below its text so `truncate` applies.
-    <li className="min-w-0 space-y-3 rounded-xl border border-border bg-card p-4 text-card-foreground">
+    <li className="min-w-0 space-y-3 rounded-2xl border border-border bg-card p-4 pr-2 text-card-foreground">
       <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/12 text-primary dark:bg-primary/15">
           <CategoryIcon iconKey={budget.categoryIcon} className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{budget.categoryName}</p>
-          <p className="truncate text-sm text-muted-foreground tabular-nums">
+          <p className="truncate text-[15px] font-semibold">{budget.categoryName}</p>
+          <p className="truncate text-[13px] text-muted-foreground tabular-nums">
             {formatPen(budget.spentCents)} de {formatPen(budget.amountCents)}
           </p>
         </div>
@@ -49,13 +51,13 @@ export function BudgetCard({ budget, onEdit, onDelete }: BudgetCardProps) {
       </div>
       <ProgressBar
         value={status.barPercent}
-        tone={status.state === "over" ? "over" : "default"}
+        tone={TONE[status.state]}
         label={`${budget.categoryName}: ${status.percent} % del presupuesto`}
       />
       <p
         className={cn(
-          "text-sm",
-          status.state === "over" ? "font-medium text-destructive" : "text-muted-foreground",
+          "pr-2 text-[13px]",
+          status.state === "over" ? "font-semibold text-expense" : "text-muted-foreground",
         )}
       >
         {statusText(status.state, status.remainingCents)}

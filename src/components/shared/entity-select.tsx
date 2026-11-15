@@ -28,7 +28,7 @@ export function EntitySelect({ id, value, options, placeholder, onChange }: Enti
       value={value || null}
       onValueChange={(next) => onChange(next ?? "")}
     >
-      <SelectTrigger id={id} className="h-11 w-full md:h-8">
+      <SelectTrigger id={id} className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

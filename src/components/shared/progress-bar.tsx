@@ -5,8 +5,8 @@ type ProgressBarProps = {
   value: number;
   /** Accessible name, e.g. "Comida: 40 % del presupuesto". */
   label: string;
-  /** "over" paints the bar with the destructive token; the state is also given as text elsewhere. */
-  tone?: "default" | "over";
+  /** Fill colour by state; the state is always given as text elsewhere too. */
+  tone?: "default" | "success" | "warning" | "over";
   className?: string;
 };
 
@@ -25,7 +25,10 @@ export function ProgressBar({ value, label, tone = "default", className }: Progr
       <div
         className={cn(
           "h-full rounded-full transition-[width] motion-reduce:transition-none",
-          tone === "over" ? "bg-destructive" : "bg-primary",
+          tone === "over" && "bg-expense",
+          tone === "warning" && "bg-warning",
+          tone === "success" && "bg-success",
+          tone === "default" && "bg-primary",
         )}
         style={{ width: `${width}%` }}
       />

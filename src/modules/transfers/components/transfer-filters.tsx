@@ -34,7 +34,6 @@ export function TransferFilters({
           <Input
             id="transfer-filter-from"
             type="date"
-            className="h-11 md:h-8"
             value={filters.from}
             onChange={(e) => onChange("from", e.target.value)}
           />
@@ -44,7 +43,6 @@ export function TransferFilters({
           <Input
             id="transfer-filter-to"
             type="date"
-            className="h-11 md:h-8"
             value={filters.to}
             onChange={(e) => onChange("to", e.target.value)}
           />
@@ -61,7 +59,7 @@ export function TransferFilters({
           <Button
             type="button"
             variant="outline"
-            className="min-h-11 w-full md:min-h-8"
+            className="w-full"
             onClick={onReset}
             disabled={!isFiltered}
           >

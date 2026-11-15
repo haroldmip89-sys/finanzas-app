@@ -23,13 +23,16 @@ export const navItems: NavItem[] = [
   { href: "/analysis", label: "Análisis", icon: ChartNoAxesColumn },
 ];
 
-// Ajustes no va en la barra inferior: se llega con el engranaje o el menú lateral.
+// Ajustes: quinta posición de la barra inferior y pie del menú lateral.
 export const settingsItem: NavItem = {
   href: "/settings",
   label: "Ajustes",
   icon: Settings,
   matches: ["/categories"],
 };
+
+// Barra inferior (móvil): Presupuestos se alcanza desde Inicio y el menú lateral.
+export const bottomNavItems: NavItem[] = [navItems[0], navItems[1], navItems[2], settingsItem];
 
 export function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";

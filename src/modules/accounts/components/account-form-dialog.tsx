@@ -51,7 +51,6 @@ function AccountForm({ account, onClose }: AccountFormProps) {
           autoFocus
           autoComplete="off"
           aria-invalid={Boolean(errors.name)}
-          className="h-11 md:h-8"
           {...form.register("name")}
         />
       </FormField>
@@ -66,7 +65,7 @@ function AccountForm({ account, onClose }: AccountFormProps) {
               value={field.value}
               onValueChange={field.onChange}
             >
-              <SelectTrigger id="account-type" className="h-11 w-full md:h-8">
+              <SelectTrigger id="account-type" className="w-full">
                 <SelectValue placeholder="Elige un tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -102,7 +101,6 @@ function AccountForm({ account, onClose }: AccountFormProps) {
               onValueChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={Boolean(errors.initialBalance)}
-              className="h-11 md:h-8"
             />
           )}
         />
@@ -114,13 +112,12 @@ function AccountForm({ account, onClose }: AccountFormProps) {
         <Button
           type="button"
           variant="outline"
-          className="min-h-11 sm:min-h-8"
           onClick={onClose}
           disabled={isPending}
         >
           Cancelar
         </Button>
-        <Button type="submit" className="min-h-11 sm:min-h-8" disabled={isPending}>
+        <Button type="submit" disabled={isPending}>
           {isPending ? "Guardando..." : "Guardar"}
         </Button>
       </DialogFooter>

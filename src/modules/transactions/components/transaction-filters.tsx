@@ -36,8 +36,8 @@ export function TransactionFilters({
   const categories = categoryOptions.map((c) => ({ value: c.id, label: c.name }));
 
   return (
-    <details className="group rounded-xl border border-border bg-card p-4 md:open:block" open>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-medium md:hidden">
+    <details className="group rounded-2xl border border-border bg-card p-4 md:open:block" open>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between text-[15px] font-semibold md:hidden">
         Filtros
         {isFiltered && <span className="text-xs text-muted-foreground">Activos</span>}
       </summary>
@@ -47,7 +47,6 @@ export function TransactionFilters({
           <Input
             id="filter-from"
             type="date"
-            className="h-11 md:h-8"
             value={filters.from}
             onChange={(e) => onChange("from", e.target.value)}
           />
@@ -57,7 +56,6 @@ export function TransactionFilters({
           <Input
             id="filter-to"
             type="date"
-            className="h-11 md:h-8"
             value={filters.to}
             onChange={(e) => onChange("to", e.target.value)}
           />
@@ -89,7 +87,7 @@ export function TransactionFilters({
           <Button
             type="button"
             variant="outline"
-            className="min-h-11 w-full md:min-h-8"
+            className="w-full"
             onClick={onReset}
             disabled={!isFiltered}
           >

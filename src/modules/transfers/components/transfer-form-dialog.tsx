@@ -57,7 +57,7 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
           title="No tienes una cuenta para pagar"
           description="Crea una cuenta de efectivo, banco o billetera para pagar la tarjeta."
           action={
-            <Link href="/accounts" className={buttonVariants({ className: "min-h-11 sm:min-h-8" })}>
+            <Link href="/accounts" className={buttonVariants({ className: "" })}>
               Ir a Cuentas
             </Link>
           }
@@ -78,7 +78,7 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
           title="Necesitas dos cuentas"
           description="Crea otra cuenta para poder mover dinero entre ellas."
           action={
-            <Link href="/accounts" className={buttonVariants({ className: "min-h-11 sm:min-h-8" })}>
+            <Link href="/accounts" className={buttonVariants({ className: "" })}>
               Ir a Cuentas
             </Link>
           }
@@ -155,7 +155,6 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
               onValueChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={Boolean(errors.amount)}
-              className="h-11 md:h-8"
             />
           )}
         />
@@ -166,7 +165,6 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
           id="tr-date"
           type="date"
           aria-invalid={Boolean(errors.date)}
-          className="h-11 md:h-8"
           {...t.form.register("date")}
         />
       </FormField>
@@ -176,7 +174,6 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
           id="tr-note"
           autoComplete="off"
           maxLength={280}
-          className="h-11 md:h-8"
           {...t.form.register("note")}
         />
       </FormField>
@@ -187,7 +184,6 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
         <Button
           type="button"
           variant="outline"
-          className="min-h-11 sm:min-h-8"
           onClick={onClose}
           disabled={t.isPending}
         >
@@ -195,7 +191,6 @@ function TransferForm({ transfer, payCardId, onClose }: TransferFormProps) {
         </Button>
         <Button
           type="submit"
-          className="min-h-11 sm:min-h-8"
           disabled={t.isPending || t.isLoadingOptions}
         >
           {t.isPending ? "Guardando..." : "Guardar"}

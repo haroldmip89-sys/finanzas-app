@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BrandLogo } from "@/components/shared/brand-logo";
 import { ImageCarousel } from "@/components/shared/image-carousel";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { authSlides } from "@/modules/auth/content/auth-slides";
@@ -19,9 +20,10 @@ export function AuthSplitLayout({ children }: { children: ReactNode }) {
       <div className="relative flex min-h-dvh items-center justify-center px-4 py-20">
         <Link
           href="/"
-          className="absolute left-4 top-4 flex min-h-11 items-center text-base font-semibold"
+          aria-label="Yupi! · Inicio"
+          className="absolute left-4 top-4 flex min-h-11 items-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Finanzas
+          <BrandLogo />
         </Link>
         <div className="absolute right-4 top-4">
           <ThemeToggle />

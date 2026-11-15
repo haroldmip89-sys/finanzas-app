@@ -22,7 +22,7 @@ export function BudgetsPage() {
   const m = useBudgetsManager();
 
   const createButton = (
-    <Button onClick={() => m.openCreate()} className="min-h-11 w-full sm:min-h-8 sm:w-auto">
+    <Button onClick={() => m.openCreate()} className="w-full sm:w-auto">
       <Plus data-icon="inline-start" />
       Nuevo presupuesto
     </Button>
@@ -33,7 +33,7 @@ export function BudgetsPage() {
       variant="outline"
       onClick={m.copyPrevious}
       disabled={m.isCopying}
-      className="min-h-11 w-full sm:min-h-8 sm:w-auto"
+      className="w-full sm:w-auto"
     >
       <Copy data-icon="inline-start" />
       {m.isCopying ? "Copiando..." : "Copiar del mes anterior"}

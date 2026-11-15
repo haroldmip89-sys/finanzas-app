@@ -25,13 +25,13 @@ export function QuickAddMenu({ trigger, align = "end" }: QuickAddMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent align={align} className="min-w-48">
-        <DropdownMenuItem className="min-h-11 md:min-h-8" onClick={() => open("expense")}>
+        <DropdownMenuItem className="min-h-11 md:min-h-10" onClick={() => open("expense")}>
           <CircleMinus /> Nuevo gasto
         </DropdownMenuItem>
-        <DropdownMenuItem className="min-h-11 md:min-h-8" onClick={() => open("income")}>
+        <DropdownMenuItem className="min-h-11 md:min-h-10" onClick={() => open("income")}>
           <CirclePlus /> Nuevo ingreso
         </DropdownMenuItem>
-        <DropdownMenuItem className="min-h-11 md:min-h-8" onClick={() => open("transfer")}>
+        <DropdownMenuItem className="min-h-11 md:min-h-10" onClick={() => open("transfer")}>
           <ArrowLeftRight /> Transferir
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -47,7 +47,7 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
           title="Aún no tienes cuentas"
           description="Crea una cuenta (BBVA, Yape, efectivo...) para registrar tus movimientos."
           action={
-            <Link href="/accounts" className={buttonVariants({ className: "min-h-11 sm:min-h-8" })}>
+            <Link href="/accounts" className={buttonVariants({ className: "" })}>
               Ir a Cuentas
             </Link>
           }
@@ -81,13 +81,13 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
           render={({ field }) => (
             <MoneyInput
               id="tx-amount"
+              className="h-16 rounded-2xl bg-background px-4 text-4xl font-extrabold tracking-tight"
               ref={field.ref}
               autoFocus
               value={field.value}
               onValueChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={Boolean(errors.amount)}
-              className="h-11 md:h-8"
             />
           )}
         />
@@ -98,7 +98,6 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
           id="tx-date"
           type="date"
           aria-invalid={Boolean(errors.date)}
-          className="h-11 md:h-8"
           {...t.form.register("date")}
         />
       </FormField>
@@ -149,7 +148,6 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
           id="tx-note"
           autoComplete="off"
           maxLength={280}
-          className="h-11 md:h-8"
           {...t.form.register("note")}
         />
       </FormField>
@@ -160,7 +158,6 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
         <Button
           type="button"
           variant="outline"
-          className="min-h-11 sm:min-h-8"
           onClick={onClose}
           disabled={t.isPending}
         >
@@ -170,14 +167,13 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
           <Button
             type="button"
             variant="secondary"
-            className="min-h-11 sm:min-h-8"
             onClick={() => t.onSubmitAndAddAnother()}
             disabled={t.isPending || t.isLoadingOptions}
           >
             Guardar y agregar otro
           </Button>
         )}
-        <Button type="submit" className="min-h-11 sm:min-h-8" disabled={t.isPending || t.isLoadingOptions}>
+        <Button type="submit" disabled={t.isPending || t.isLoadingOptions}>
           {t.isPending ? "Guardando..." : "Guardar"}
         </Button>
       </DialogFooter>

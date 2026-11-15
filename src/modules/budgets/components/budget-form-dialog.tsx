@@ -95,7 +95,6 @@ function BudgetForm({ month, budget, presetCategoryId, budgetedCategoryIds, onCl
               onValueChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={Boolean(errors.amount)}
-              className="h-11 md:h-8"
             />
           )}
         />
@@ -107,7 +106,6 @@ function BudgetForm({ month, budget, presetCategoryId, budgetedCategoryIds, onCl
         <Button
           type="button"
           variant="outline"
-          className="min-h-11 sm:min-h-8"
           onClick={onClose}
           disabled={b.isPending}
         >
@@ -115,7 +113,6 @@ function BudgetForm({ month, budget, presetCategoryId, budgetedCategoryIds, onCl
         </Button>
         <Button
           type="submit"
-          className="min-h-11 sm:min-h-8"
           disabled={b.isPending || b.isLoadingOptions}
         >
           {b.isPending ? "Guardando..." : "Guardar"}

@@ -42,7 +42,7 @@ export function UnbudgetedList({ items, onBudget }: UnbudgetedListProps) {
               <Button
                 type="button"
                 variant="outline"
-                className="min-h-11 shrink-0 md:min-h-8"
+                className="shrink-0"
                 aria-label={`Presupuestar ${item.categoryName}`}
                 onClick={() => onBudget(item.categoryId)}
               >

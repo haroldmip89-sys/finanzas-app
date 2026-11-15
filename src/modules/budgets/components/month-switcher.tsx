@@ -26,7 +26,6 @@ export function MonthSwitcher({
         type="button"
         variant="outline"
         size="icon"
-        className="size-11 md:size-8"
         aria-label="Mes anterior"
         onClick={onPrevious}
       >
@@ -42,7 +41,6 @@ export function MonthSwitcher({
         type="button"
         variant="outline"
         size="icon"
-        className="size-11 md:size-8"
         aria-label="Mes siguiente"
         onClick={onNext}
       >
@@ -52,7 +50,6 @@ export function MonthSwitcher({
         <Button
           type="button"
           variant="ghost"
-          className="min-h-11 md:min-h-8"
           onClick={onThisMonth}
         >
           Este mes

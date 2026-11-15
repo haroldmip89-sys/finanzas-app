@@ -76,7 +76,7 @@ function CalibrationForm({ accountId, onClose }: CalibrationFormProps) {
           title="Aún no tienes cuentas"
           description="Crea una cuenta para poder calibrar su saldo."
           action={
-            <Link href="/accounts" className={buttonVariants({ className: "min-h-11 sm:min-h-8" })}>
+            <Link href="/accounts" className={buttonVariants({ className: "" })}>
               Ir a Cuentas
             </Link>
           }
@@ -145,7 +145,6 @@ function CalibrationForm({ accountId, onClose }: CalibrationFormProps) {
               onValueChange={field.onChange}
               onBlur={field.onBlur}
               aria-invalid={Boolean(errors.realBalance)}
-              className="h-11 md:h-8"
             />
           )}
         />
@@ -161,7 +160,6 @@ function CalibrationForm({ accountId, onClose }: CalibrationFormProps) {
         <Button
           type="button"
           variant="outline"
-          className="min-h-11 sm:min-h-8"
           onClick={onClose}
           disabled={c.isPending}
         >
@@ -169,7 +167,6 @@ function CalibrationForm({ accountId, onClose }: CalibrationFormProps) {
         </Button>
         <Button
           type="submit"
-          className="min-h-11 sm:min-h-8"
           disabled={c.isPending || c.isLoadingOptions || !c.canSubmit}
         >
           {c.isPending ? "Calibrando..." : "Calibrar"}
