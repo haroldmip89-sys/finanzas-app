@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 
 import { QuickActions } from "@/modules/quick-add/components/quick-actions";
+
+export const metadata: Metadata = { title: "Inicio" };
 
 export default async function DashboardPage() {
   await auth.protect();
