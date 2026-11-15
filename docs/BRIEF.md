@@ -182,7 +182,7 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | 5 | 008 | Presupuestos mensuales por categoría | P1 | Hecha |
 | 6 | 009a | Dinero disponible (fórmula, explicación, reservas, obligaciones) | P0 | Pendiente (nuevo) |
 | 7 | 009 | Dashboard orientado a decisiones | P0 | Pendiente |
-| 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Pendiente, antes de desplegar |
+| 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Hecha (falta aplicar migraciones y desplegar: ver `docs/DEPLOY.md`) |
 | 9 | 010a | Compras impulsivas evitadas | P1 | Hecha |
 | 10 | 010c | Compra consciente | P1 | Hecha |
 | 11 | 010b | Resumen financiero semanal | P1 | Hecha |
