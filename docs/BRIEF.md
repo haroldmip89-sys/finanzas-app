@@ -19,15 +19,15 @@ Un MVP robusto: poco alcance funcional, pero con auth, aislamiento de datos, val
 - Cuentas (efectivo, banco, tarjeta, billetera digital) con saldo inicial.
 - Categorías de ingreso y gasto (con set por defecto sembrado al primer ingreso del usuario).
 - Transacciones: ingreso o gasto, monto, fecha, cuenta, categoría, nota. Crear, editar, eliminar, listar con filtros (rango de fechas, tipo, cuenta, categoría) y paginación.
+- Transferencias entre cuentas propias (ej. de BBVA a Yape): mueven dinero sin contar como ingreso ni gasto.
 - Presupuesto mensual por categoría de gasto, con avance (gastado vs. presupuestado).
 - Dashboard: saldo total, ingresos y gastos del mes, gasto por categoría, avance de presupuestos, últimas transacciones.
 - **Totalmente responsive** (mobile-first): toda pantalla usable desde 360 px hasta escritorio, sin scroll horizontal. Navegación: barra inferior o menú en móvil, sidebar en escritorio. Tablas y listados se adaptan (tarjetas en móvil). Formularios y diálogos usables con teclado táctil, objetivos táctiles ≥ 44 px.
-- **Tema dark por defecto**: la app arranca en oscuro usando los tokens `.dark` de `src/app/globals.css` (`<html class="dark">`). Todos los componentes y gráficos deben verse bien en oscuro (contraste AA). **Tema intercambiable dark ↔ light** con un botón en la UI (opciones: oscuro, claro, sistema; por defecto oscuro). La preferencia se guarda en el navegador (`next-themes`, localStorage + cookie), sin tabla ni llamada a Neon o Clerk. Los componentes de Clerk (`SignIn`, `SignUp`, `UserButton`) siguen el tema activo mediante `appearance.baseTheme`.
+- **Tema dark por defecto**: la app arranca en oscuro usando los tokens `.dark` de `src/app/globals.css` (`<html class="dark">`). Todos los componentes y gráficos deben verse bien en oscuro (contraste AA). **Tema intercambiable dark ↔ light** con un botón en la UI (opciones: oscuro, claro, sistema; por defecto oscuro). La preferencia se guarda en el navegador (`next-themes`, localStorage + cookie), sin tabla ni llamada a Neon o Clerk. Los componentes de Clerk (`SignIn`, `SignUp`, `UserButton`) siguen el tema activo con el tema `shadcn` de `@clerk/ui`, que lee los tokens CSS de la app.
 
 **Fuera del MVP (no construir)**
 
 - Multimoneda y tipo de cambio (solo PEN).
-- Transferencias entre cuentas.
 - Transacciones recurrentes, metas de ahorro, deudas.
 - Importación/exportación (CSV, bancos), adjuntos.
 - Organizaciones o cuentas compartidas entre usuarios.
@@ -60,20 +60,22 @@ No se usa Supabase.
 4. **Fechas.** La fecha de una transacción es un `date` (sin hora) interpretado en `America/Lima`; los timestamps de auditoría (`created_at`, `updated_at`) son `timestamptz`.
 5. **Integridad en la DB.** Claves foráneas, `CHECK (amount_cents > 0)`, índices por `(user_id, date)` y restricciones únicas donde aplique.
 6. **Responsive y dark siempre.** Cada spec de UI incluye criterios de aceptación a 360 px, 768 px y 1280 px, en tema oscuro. Se usan clases Tailwind mobile-first y tokens semánticos (`bg-background`, `text-foreground`), nunca colores fijos.
-7. **Secretos fuera del repo.** Claves de Clerk y `DATABASE_URL` solo en `.env.local` / variables del hosting; `.env.example` documenta los nombres.
+7. **Código mantenible.** Lógica en hooks, componentes reutilizables y errores controlados en tres capas de validación (ver `docs/SETUP.md §2`, "Convenciones adicionales").
+8. **Secretos fuera del repo.** Claves de Clerk y `DATABASE_URL` solo en `.env.local` / variables del hosting; `.env.example` documenta los nombres.
 
 ## 6. Plan de specs (orden sugerido)
 
 | # | Spec | Contenido |
 |---|---|---|
 | 001 | auth-clerk | `ClerkProvider`, middleware que protege rutas, páginas sign-in/sign-up, layout autenticado |
-| 001b | theme-and-layout | Tema dark por defecto + toggle dark/light con `next-themes` (Clerk sigue el tema vía `appearance.baseTheme`), shell responsive: sidebar en escritorio, navegación inferior/menú en móvil |
+| 001b | theme-and-layout | Tema dark por defecto + toggle dark/light con `next-themes` (Clerk sigue el tema vía el tema `shadcn` de `@clerk/ui`), shell responsive: sidebar en escritorio, navegación inferior/menú en móvil |
 | 002 | database-schema | Drizzle + Neon, esquema, migraciones, helper de acceso por usuario, `.env.example` |
 | 003 | categories-and-accounts | Módulos `categories` y `accounts`, seed de categorías por defecto |
 | 004 | transactions | Módulo `transactions`: CRUD, filtros, paginación, formato PEN |
-| 005 | budgets | Presupuesto mensual por categoría y su avance |
-| 006 | dashboard | Resumen mensual y gráficos, migrando la UI útil de `app-finanzas` |
-| 007 | hardening | Rate limiting básico, estados de error/vacío/carga, accesibilidad, tests transversales, deploy (Vercel + Neon) |
+| 005 | transfers | Transferencias entre cuentas propias: tabla `transfers`, CRUD, y saldo por cuenta que las incluye |
+| 006 | budgets | Presupuesto mensual por categoría y su avance |
+| 007 | dashboard | Resumen mensual y gráficos, migrando la UI útil de `app-finanzas` |
+| 008 | hardening | Rate limiting básico, estados de error/vacío/carga, accesibilidad, tests transversales, deploy (Vercel + Neon) |
 
 ## 7. Referencia: proyecto previo
 

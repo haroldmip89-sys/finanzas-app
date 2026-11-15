@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal finance and expense tracker (single currency: **PEN**, soles). Personal use first, multi-user by design (Clerk auth, every row scoped by `user_id`). Stack on top of this template: **Clerk** (auth) + **Neon Postgres** with **Drizzle ORM** (no Supabase) + Zod.
 
-MVP: accounts, categories, income/expense transactions with filters, monthly budgets per category, dashboard. UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light via a toggle (`next-themes`, preference stored in the browser; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. Out of scope: multi-currency, transfers, recurring transactions, import/export, shared accounts.
+MVP: accounts, categories, income/expense transactions with filters, transfers between accounts, monthly budgets per category, dashboard. UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light via a toggle (`next-themes`, preference stored in the browser; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. Transfers between own accounts are in scope (spec 005). Out of scope: multi-currency, recurring transactions, import/export, shared accounts.
 
 Key rules (details in `docs/architecture/system-design.md`):
 
@@ -57,17 +57,11 @@ When adding any of the above, prefer wiring minimal, idiomatic setup (e.g. a sin
 2. **Best practices** — SOLID, DRY, KISS, YAGNI. Before creating any component, hook, function or service, check that it doesn't already exist in `src/` (and, for UI, in the shadcn/ui registry).
 3. **Methodology** — Spec Driven Development (SDD) with unit tests (Vitest + RTL) where the spec requires them.
 
-## SDD agents (`.claude/agents/`)
+## Workflow: lightweight SDD (no agents by default)
 
-| Agent | Role |
-|---|---|
-| `orchestrator` | Entry point for any non-trivial task. Decides **SDD vs. direct build mode**, splits work into session-sized phases, defines which tasks can run in parallel, and drives the spec → developer → reviewer cycle. |
-| `spec` | Writes `docs/specs/<NNN>-<slug>.md` (scope, inventory of existing code to reuse, contracts, tasks with file ownership, acceptance criteria, required tests). Always saves as `Estado: borrador`. |
-| `developer` | Implements one task of an **approved** spec, only within its assigned files, plus required tests. Refuses (`BLOCKED`) if the spec is not approved. |
-| `reviewer` | Read-only. Validates the diff against the spec, `docs/SETUP.md` and `docs/architecture/`, runs lint/test/build, returns `APPROVED` or `CHANGES_REQUESTED`. |
+Agreed with the user: the main session writes the spec, the user approves it, then the main session implements it directly. The 4 agents in `.claude/agents/` (`orchestrator`, `spec`, `developer`, `reviewer`) stay available but are **not launched unless the user asks** — they cost more tokens and time.
 
-**Flow:** `orchestrator` → `spec` (draft) → **human approval** → `developer` (parallel tasks in a single message) → `reviewer` → on `CHANGES_REQUESTED`, send only the findings back to `developer` (or to `spec` if `origen: spec`) and re-review; max 3 iterations, then escalate to the user.
-
-- **Human approval is a hard gate.** Never launch `developer` until the user has explicitly approved the spec; only then set `Estado: aprobada` (then `en progreso` when launching developers, `hecha` after `APPROVED`). Silence or "it's small" is not approval. A spec edited after approval goes back to `borrador` and needs approval again.
-- **Parallel tasks must not conflict:** disjoint file ownership per task; dependency installs, configs, `src/app/layout.tsx`, `src/lib/**`, `src/components/ui/**` and shared contracts run serially first. During the parallel block nobody runs `npm install` or `npm run build` (shared `node_modules/` and `.next/`); the reviewer runs the full build at the end.
-- Subagents can't always spawn subagents: if `orchestrator` returns an execution plan instead of running it, the main thread drives the flow above, including asking the user for spec approval.
+1. Write a short spec in `docs/specs/<NNN>-<slug>.md` (`Estado: borrador`): objective, scope (in / out), files, acceptance criteria, required tests. No per-task file-ownership breakdown needed.
+2. **Human approval is a hard gate.** Do not implement until the user approves; then set `Estado: aprobada`, and `hecha` when finished. A spec edited after approval goes back to `borrador`.
+3. Implement directly, then run `npm run lint`, `npm run test`, `npm run build`, and check the acceptance criteria (browser for UI).
+4. Use the `reviewer` agent only for risky specs (auth, database, money calculations, security), and only with the user's OK.

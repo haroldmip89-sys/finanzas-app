@@ -103,11 +103,24 @@ Preferir la solución más simple que resuelva el problema actual. Evitar capas 
 
 No construir generalidad para casos de uso hipotéticos. No crear carpetas, props, opciones de configuración o abstracciones "por si se necesitan después". Se agregan cuando aparece el segundo caso de uso real, no antes.
 
+### Convenciones adicionales (lógica, errores, componentes)
+
+1. **Toda la lógica en hooks.** Los componentes solo renderizan: estado, efectos, handlers, llamadas a server actions y consultas viven en hooks `use-*.ts` del módulo (`modules/<domain>/hooks`). Un componente que necesita más que props y un hook probablemente mezcla responsabilidades. Los hooks con lógica propia llevan test (`renderHook`).
+2. **Componentes reutilizables.** Todo componente genérico (estado vacío, diálogo de confirmación, campo de formulario, cabecera de página, tabla, carrusel) va en `src/components/shared`, sin lógica de dominio y con props mínimas; se revisa `src/components/shared` y shadcn antes de crear uno nuevo. Un componente de dominio solo compone los genéricos.
+3. **Errores controlados de punta a punta.**
+   - Los servicios lanzan un `AppError` tipado (`code`, mensaje seguro para el usuario, `status`); nunca propagan mensajes crudos de Postgres, Neon o Clerk.
+   - Las server actions no lanzan hacia el cliente: devuelven un resultado `{ ok: true, data } | { ok: false, error }` con `fieldErrors` cuando aplique.
+   - Los hooks exponen `error` y `isPending`; los componentes muestran el error con un componente compartido, nunca con `alert`.
+   - Cada segmento con datos tiene `loading.tsx` y `error.tsx` (con acción de reintentar); lo inesperado se registra en el servidor sin datos sensibles.
+4. **Validación en tres capas.** Zod en el borde (server action / route handler), reglas de negocio en el servicio (pertenencia al usuario, cuenta o categoría archivada, tipo coincidente) y restricciones de la base (`CHECK`, claves compuestas). Ninguna capa confía en las otras.
+
 ---
 
 ## 3. Metodología de trabajo: SDD (Spec Driven Development)
 
 El desarrollo se organiza con **Spec Driven Development**: antes de implementar, se define una spec (qué se va a construir y su criterio de aceptación); la implementación y la revisión se verifican contra esa spec, no contra la interpretación de quien escribe el código.
+
+> **Flujo acordado (ligero):** por defecto la sesión principal escribe la spec, el humano la aprueba y la misma sesión implementa; los 4 roles de abajo describen el flujo completo con agentes (`.claude/agents/`), que solo se usa si el usuario lo pide. El `reviewer` se usa únicamente en specs de riesgo (auth, base de datos, dinero, seguridad). La aprobación humana de la spec sigue siendo bloqueante.
 
 ### Roles
 
