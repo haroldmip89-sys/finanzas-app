@@ -184,7 +184,7 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | 7 | 009 | Dashboard orientado a decisiones | P0 | Pendiente |
 | 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Pendiente, antes de desplegar |
 | 9 | 010a | Compras impulsivas evitadas | P1 | Hecha |
-| 10 | 010c | Compra consciente | P1 | Pendiente (nuevo) |
+| 10 | 010c | Compra consciente | P1 | Hecha |
 | 11 | 010b | Resumen financiero semanal | P1 | Pendiente (nuevo) |
 | 12 | 011 | PWA | — | Pospuesta |
 

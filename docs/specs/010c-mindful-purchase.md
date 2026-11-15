@@ -1,6 +1,6 @@
 # Compra consciente
 
-Estado: borrador
+Estado: hecha (aprobada por delegación del usuario; decisiones tomadas con la recomendación de la spec)
 
 ## Objetivo
 
@@ -70,8 +70,16 @@ Referencias: `docs/BRIEF.md §5.3, §5.2`, specs 008 (presupuestos), 009a (diner
 - Componente y formulario (RTL): aparece o no según umbral, registrar, pensar y volver.
 - Prueba en vivo en Neon con usuario temporal tras aplicar la migración.
 
-## Preguntas abiertas
+## Decisiones cerradas (por delegación)
 
-1. ¿Umbral por defecto de S/ 100, o prefieres otro valor?
-2. ¿Confirmas la tabla `user_settings` (recomendada) en lugar de `localStorage`?
-3. Esta spec depende de 010a para "Pensarlo". ¿Hacemos primero 010a, como indica el roadmap, o quieres que 010c funcione sin "Pensarlo" y se lo agregue después?
+1. Umbral por defecto: **S/ 100**.
+2. Configuración en la tabla `user_settings` (migración 0005).
+3. 010a ya está hecha, así que "Pensarlo" crea una compra **pospuesta** con `revisitAt` (ahora + 10 min o + 24 h).
+
+## Notas de implementación
+
+- Migración `drizzle/0005_thick_mephisto.sql` (tabla `user_settings`). **Hay que aplicarla a Neon antes de usar la app contra esa base**; no se aplicó a la base real. Sin la tabla, leer los ajustes falla y el paso simplemente no aparece (el formulario sigue funcionando).
+- Ajustes en `/settings/mindful`, enlazado desde Ajustes.
+- El paso vive en `MindfulPurchaseStep`; `useTransactionForm` decide cuándo abrirlo (`shouldAsk`) y "Pensarlo" crea una compra pospuesta con `revisitAt` (010a).
+- La pregunta "¿Es necesaria?" no se guarda en la transacción: solo define el motivo (`can_wait` o `not_needed`) de la compra pospuesta.
+- Verificado: lint, 645 tests y build pasan.

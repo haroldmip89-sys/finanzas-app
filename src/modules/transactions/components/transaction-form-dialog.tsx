@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet } from "lucide-react";
 
+import { MindfulPurchaseStep } from "@/modules/mindful-purchase/components/mindful-purchase-step";
 import { useTransactionForm } from "../hooks/use-transaction-form";
 import { CategoryChips } from "./category-chips";
 import type { TransactionListItem, TransactionType } from "../types/transaction.types";
@@ -54,6 +55,10 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
         />
       </div>
     );
+  }
+
+  if (t.mindful) {
+    return <MindfulPurchaseStep {...t.mindful} error={t.submitError ?? undefined} />;
   }
 
   return (

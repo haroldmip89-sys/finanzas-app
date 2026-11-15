@@ -36,6 +36,13 @@
       "when": 1794745378408,
       "tag": "0004_high_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794745643985,
+      "tag": "0005_thick_mephisto",
+      "breakpoints": true
     }
   ]
 }

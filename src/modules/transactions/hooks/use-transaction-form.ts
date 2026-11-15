@@ -9,6 +9,10 @@ import { centsToPen, formatPen, penToCents } from "@/lib/money";
 import { useLastAccount } from "@/hooks/use-last-account";
 import { useZodForm } from "@/hooks/use-zod-form";
 import { useAccounts } from "@/modules/accounts/hooks/use-accounts";
+import { useCreateAvoidedPurchase } from "@/modules/avoided-purchases/hooks/use-avoided-purchases";
+import type { AvoidedReason } from "@/modules/avoided-purchases/types/avoided-purchase.types";
+import { revisitAtFor, shouldAsk, type PauseOption } from "@/modules/mindful-purchase/mindful-purchase";
+import { useMindfulSettings } from "@/modules/mindful-purchase/hooks/use-mindful-settings";
 import { useCategories } from "@/modules/categories/hooks/use-categories";
 
 import {
@@ -62,6 +66,13 @@ export function useTransactionForm({
   onSuccess,
 }: Options) {
   const save = useSaveTransaction();
+  const createAvoided = useCreateAvoidedPurchase();
+  const mindfulSettings = useMindfulSettings();
+  // Values waiting for the "compra consciente" step; null when it is not showing.
+  const [mindfulPending, setMindfulPending] = useState<{
+    values: TransactionFormValues;
+    addAnother: boolean;
+  } | null>(null);
   const accountsQuery = useAccounts(false);
   const categoriesQuery = useCategories(false);
   const { lastAccountId, saveLastAccount } = useLastAccount();
@@ -112,46 +123,107 @@ export function useTransactionForm({
 
   const frequentCategories = frequentQuery.data ?? [];
 
+  const persist = async (values: TransactionFormValues, addAnother: boolean) => {
+    try {
+      await save.mutateAsync({ id: transaction?.id, input: toTransactionInput(values) });
+    } catch (error) {
+      // Back to the form so the field errors are visible.
+      setMindfulPending(null);
+      applyServerError({
+        message: errorMessage(error),
+        fieldErrors: error instanceof ActionFailure ? error.fieldErrors : undefined,
+      });
+      return;
+    }
+
+    setMindfulPending(null);
+    saveLastAccount(values.accountId);
+    const amount = formatPen(penToCents(values.amount) ?? 0);
+    if (transaction) {
+      toast.success(`Transacción actualizada · ${amount}`);
+    } else {
+      toast.success(`${values.type === "expense" ? "Gasto" : "Ingreso"} guardado · ${amount}`);
+    }
+
+    if (addAnother) {
+      // Ready for the next one: keep type, account and date.
+      form.reset({
+        type: values.type,
+        accountId: values.accountId,
+        categoryId: "",
+        amount: "",
+        date: values.date,
+        note: "",
+      });
+      form.setFocus("amount");
+    } else {
+      onSuccess();
+    }
+  };
+
   const submit = (addAnother: boolean) =>
     form.handleSubmit(async (values) => {
-      try {
-        await save.mutateAsync({ id: transaction?.id, input: toTransactionInput(values) });
-      } catch (error) {
-        applyServerError({
-          message: errorMessage(error),
-          fieldErrors: error instanceof ActionFailure ? error.fieldErrors : undefined,
+      const settings = mindfulSettings.data;
+      const ask =
+        settings &&
+        shouldAsk({
+          enabled: settings.enabled,
+          thresholdCents: settings.thresholdCents,
+          type: values.type,
+          isEditing: Boolean(transaction),
+          amountCents: penToCents(values.amount) ?? 0,
         });
+      if (ask) {
+        setMindfulPending({ values, addAnother });
         return;
       }
-
-      saveLastAccount(values.accountId);
-      const amount = formatPen(penToCents(values.amount) ?? 0);
-      if (transaction) {
-        toast.success(`Transacción actualizada · ${amount}`);
-      } else {
-        toast.success(
-          `${values.type === "expense" ? "Gasto" : "Ingreso"} guardado · ${amount}`,
-        );
-      }
-
-      if (addAnother) {
-        // Ready for the next one: keep type, account and date.
-        form.reset({
-          type: values.type,
-          accountId: values.accountId,
-          categoryId: "",
-          amount: "",
-          date: values.date,
-          note: "",
-        });
-        form.setFocus("amount");
-      } else {
-        onSuccess();
-      }
+      await persist(values, addAnother);
     });
+
+  /** "Pensarlo": no transaction; the purchase is kept as postponed (spec 010a). */
+  const pause = async (option: PauseOption, reason: AvoidedReason) => {
+    if (!mindfulPending) return;
+    const { values } = mindfulPending;
+    try {
+      await createAvoided.mutateAsync({
+        amountCents: penToCents(values.amount) ?? 0,
+        date: values.date,
+        categoryId: values.categoryId || null,
+        reason,
+        note: values.note,
+        status: "postponed",
+        revisitAt: revisitAtFor(option),
+      });
+    } catch (error) {
+      setMindfulPending(null);
+      applyServerError({ message: errorMessage(error) });
+      return;
+    }
+    setMindfulPending(null);
+    toast.success(
+      option === "10m"
+        ? "Queda en espera. Decide en 10 minutos."
+        : "Queda en espera. Decide mañana.",
+    );
+    onSuccess();
+  };
+
+  const mindful = mindfulPending
+    ? {
+        amountCents: penToCents(mindfulPending.values.amount) ?? 0,
+        accountId: mindfulPending.values.accountId,
+        categoryId: mindfulPending.values.categoryId,
+        date: mindfulPending.values.date,
+        pending: save.isPending || createAvoided.isPending,
+        onRegister: () => void persist(mindfulPending.values, mindfulPending.addAnother),
+        onBack: () => setMindfulPending(null),
+        onPause: (option: PauseOption, reason: AvoidedReason) => void pause(option, reason),
+      }
+    : null;
 
   return {
     form,
+    mindful,
     type,
     accountOptions,
     categoryOptions,
