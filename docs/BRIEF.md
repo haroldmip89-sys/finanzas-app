@@ -178,7 +178,7 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | 2 | 007 | Calibración de saldos (ajuste, fuera de ingresos y gastos) | P0 | Hecha |
 | 3 | 007a-1 | Tarjetas de crédito (versión ligera): deuda, totales líquido y deuda, compras con tarjeta del mes, pagar tarjeta; sin fechas ni cuotas | P1 | Hecha |
 | 4 | 012 | Base visual con Artifact Design (prompt en `docs/design/`, spec 012-ui-foundation): tokens, componentes y pantallas existentes, sin cambiar el comportamiento | — | Spec escrita, esperando el diseño |
-| — | 007a-2 | Compras en cuotas, vencimientos, intereses y devoluciones | — | Pospuesta (solo si se necesita) |
+| — | 007a-2 | Compras en cuotas (versión ligera: avance manual, interés implícito; sin devoluciones, sin efecto en el disponible) | — | Hecha |
 | 5 | 008 | Presupuestos mensuales por categoría | P1 | Hecha |
 | 6 | 009a | Dinero disponible (fórmula, explicación, reservas, obligaciones) | P0 | Pendiente (nuevo) |
 | 7 | 009 | Dashboard orientado a decisiones | P0 | Pendiente |
@@ -186,7 +186,7 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | 9 | 010a | Compras impulsivas evitadas | P1 | Hecha |
 | 10 | 010c | Compra consciente | P1 | Hecha |
 | 11 | 010b | Resumen financiero semanal | P1 | Hecha |
-| 12 | 011 | PWA | — | Pospuesta |
+| 12 | 011 | PWA | — | Hecha |
 
 Cambios respecto al v0.2: se añade 006b, que el v0.2 pide (navegación) pero no numera; las tarjetas pasan a una **versión ligera** (007a-1: sin fechas, límite ni cuotas, porque el usuario no quiere registrar ese detalle) y las cuotas (007a-2) quedan pospuestas; la spec 009a (dinero disponible) se construye **antes** que el dashboard, porque este lo muestra primero; y la compra consciente recibe el id 010c, porque el v0.2 no le asigna uno.
 

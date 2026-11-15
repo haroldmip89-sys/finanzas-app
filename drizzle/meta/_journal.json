@@ -43,6 +43,13 @@
       "when": 1794745643985,
       "tag": "0005_thick_mephisto",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794746427783,
+      "tag": "0006_gigantic_starfox",
+      "breakpoints": true
     }
   ]
 }

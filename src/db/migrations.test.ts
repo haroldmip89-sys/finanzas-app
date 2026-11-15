@@ -26,6 +26,7 @@ describe("migrations", () => {
       "avoided_purchases",
       "budgets",
       "categories",
+      "installment_plans",
       "transactions",
       "transfers",
       "user_settings",

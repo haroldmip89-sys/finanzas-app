@@ -26,8 +26,9 @@ Las migraciones de `drizzle/` se aplican con `npm run db:migrate` (con `DATABASE
 | `0003_wild_adam_warlock` | Columna `include_in_available` en `accounts` (dinero disponible, spec 009a). |
 | `0004_high_puppet_master` | Tabla `avoided_purchases` (compras evitadas, spec 010a). |
 | `0005_thick_mephisto` | Tabla `user_settings` (compra consciente, spec 010c). |
+| `0006_gigantic_starfox` | Tabla `installment_plans` (compras en cuotas, spec 007a-2). |
 
-Sin la 0003 falla el listado de cuentas; sin la 0004 fallan Compras evitadas y el resumen semanal; sin la 0005 el paso de compra consciente simplemente no aparece. Las tres son aditivas (no borran datos). **Haz una copia o una rama de Neon antes de migrar la base con tus datos reales.**
+Sin la 0003 falla el listado de cuentas; sin la 0004 fallan Compras evitadas y el resumen semanal; sin la 0005 el paso de compra consciente simplemente no aparece; sin la 0006 solo falla la vista de cuotas. Todas son aditivas (no borran datos). **Haz una copia o una rama de Neon antes de migrar la base con tus datos reales.**
 
 ## 3. Clerk de producción
 
@@ -44,7 +45,7 @@ Sin la 0003 falla el listado de cuentas; sin la 0004 fallan Compras evitadas y e
 ## 5. Antes de publicar
 
 - [ ] `npm run lint`, `npm run test` y `npm run build` pasan.
-- [ ] Migraciones 0003 a 0005 aplicadas en la base destino (con copia previa).
+- [ ] Migraciones 0003 a 0006 aplicadas en la base destino (con copia previa).
 - [ ] Variables de producción cargadas en Vercel.
 - [ ] Instancia de Clerk de producción configurada.
 
