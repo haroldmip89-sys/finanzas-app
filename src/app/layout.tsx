@@ -7,6 +7,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/shared/theme-provider";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import { Toaster } from "@/components/ui/sonner";
+import { RegisterServiceWorker } from "@/modules/pwa/components/register-service-worker";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           <ClerkProvider appearance={{ theme: shadcn }}>{children}</ClerkProvider>
           <Toaster position="top-center" />
+          <RegisterServiceWorker />
         </ThemeProvider>
       </body>
     </html>
