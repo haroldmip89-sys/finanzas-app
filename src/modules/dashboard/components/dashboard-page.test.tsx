@@ -8,11 +8,13 @@ const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const bud = vi.hoisted(() => ({ listBudgetsAction: vi.fn() }));
 const tx = vi.hoisted(() => ({ listTransactionsAction: vi.fn() }));
 const quick = vi.hoisted(() => ({ open: vi.fn() }));
+const avoided = vi.hoisted(() => ({ getAvoidedOverviewAction: vi.fn() }));
 
 vi.mock("../actions/dashboard.actions", () => dash);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/budgets/actions/budgets.actions", () => bud);
 vi.mock("@/modules/transactions/actions/transactions.actions", () => tx);
+vi.mock("@/modules/avoided-purchases/actions/avoided-purchases.actions", () => avoided);
 vi.mock("@/modules/quick-add/hooks/use-quick-add", () => ({ useQuickAdd: () => quick }));
 vi.mock("@/modules/quick-add/components/quick-actions", () => ({ QuickActions: () => null }));
 
@@ -92,6 +94,20 @@ function setup(
         previousMonthHasBudgets: false,
       },
     ),
+  );
+  avoided.getAvoidedOverviewAction.mockResolvedValue(
+    ok({
+      items: [],
+      summary: {
+        avoidedCount: 0,
+        avoidedCents: 0,
+        previousAvoidedCount: 0,
+        previousAvoidedCents: 0,
+        postponedCount: 0,
+        postponedCents: 0,
+        byCategory: [],
+      },
+    }),
   );
   tx.listTransactionsAction.mockResolvedValue(
     ok({

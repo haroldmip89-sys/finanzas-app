@@ -1,3 +1,4 @@
+import { AvoidedSummaryCard } from "@/modules/avoided-purchases/components/avoided-summary-card";
 import { AvailableMoneyCard } from "@/modules/available-money/components/available-money-card";
 import { QuickActions } from "@/modules/quick-add/components/quick-actions";
 
@@ -17,6 +18,7 @@ export function DashboardPage() {
         <div className="grid min-w-0 content-start gap-4">
           <DebtSummary />
           <BudgetSummary />
+          <AvoidedSummaryCard />
         </div>
       </div>
       <RecentMovements />

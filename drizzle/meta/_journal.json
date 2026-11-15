@@ -29,6 +29,13 @@
       "when": 1794742976752,
       "tag": "0003_wild_adam_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794745378408,
+      "tag": "0004_high_puppet_master",
+      "breakpoints": true
     }
   ]
 }

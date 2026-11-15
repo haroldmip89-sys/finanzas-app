@@ -23,6 +23,7 @@ describe("migrations", () => {
 
     expect(rows.map((r) => r.table_name)).toEqual([
       "accounts",
+      "avoided_purchases",
       "budgets",
       "categories",
       "transactions",
@@ -38,6 +39,8 @@ describe("migrations", () => {
 
     expect(rows.map((r) => r.typname)).toEqual([
       "account_type",
+      "avoided_reason",
+      "avoided_status",
       "category_kind",
     ]);
   });
