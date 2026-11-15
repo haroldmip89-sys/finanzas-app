@@ -1,8 +1,9 @@
-import { and, desc, eq, gte, lte, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, lte, sql, type SQL } from "drizzle-orm";
 
 import { db as defaultDb } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import type { Database } from "@/db/types";
+import { addDays, todayInLima } from "@/lib/dates";
 import { AppError, type FieldErrors } from "@/lib/errors";
 
 import {
@@ -12,6 +13,7 @@ import {
   type TransactionInput,
 } from "../schemas/transaction.schema";
 import type {
+  FrequentCategory,
   Transaction,
   TransactionListItem,
   TransactionPage,
@@ -162,7 +164,48 @@ export function createTransactionsService(db: Database) {
     };
   }
 
-  return { list, create, update, remove };
+  /**
+   * Active categories of a type, most used first (transactions of the last 90
+   * days in Lima); unused ones follow by name. One query, no N+1.
+   */
+  async function frequentCategories(
+    userId: string,
+    type: "income" | "expense",
+    limit = 6,
+    now: Date = new Date(),
+  ): Promise<FrequentCategory[]> {
+    const since = addDays(todayInLima(now), -90);
+    const uses = sql<number>`count(${transactions.id})::int`;
+
+    return db
+      .select({
+        id: categories.id,
+        name: categories.name,
+        icon: categories.icon,
+        uses,
+      })
+      .from(categories)
+      .leftJoin(
+        transactions,
+        and(
+          eq(transactions.categoryId, categories.id),
+          eq(transactions.userId, userId),
+          gte(transactions.date, since),
+        ),
+      )
+      .where(
+        and(
+          eq(categories.userId, userId),
+          eq(categories.kind, type),
+          isNull(categories.archivedAt),
+        ),
+      )
+      .groupBy(categories.id)
+      .orderBy(desc(uses), asc(categories.name))
+      .limit(limit);
+  }
+
+  return { list, create, update, remove, frequentCategories };
 }
 
 export const transactionsService = createTransactionsService(defaultDb);

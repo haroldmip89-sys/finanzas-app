@@ -24,14 +24,27 @@ export function createAccountsService(db: Database) {
     userId: string,
     options: { includeArchived?: boolean } = {},
   ): Promise<AccountWithBalance[]> {
-    // Current balance = initial + income - expense, in one query for all accounts.
-    // Columns are qualified by hand: inside a subquery drizzle omits the table
-    // prefix, and an unqualified "id" would resolve to transactions.id.
-    const balanceCents = sql<number>`(${accounts.initialBalanceCents} + coalesce((
-      select sum(case when "transactions"."type" = 'income' then "transactions"."amount_cents" else -"transactions"."amount_cents" end)
-      from "transactions"
-      where "transactions"."account_id" = "accounts"."id" and "transactions"."user_id" = "accounts"."user_id"
-    ), 0))::float8`;
+    // Current balance = initial + income - expense + transfers in - transfers out,
+    // in one query for all accounts. Columns are qualified by hand: inside a
+    // subquery drizzle omits the table prefix, and an unqualified "id" would
+    // resolve to the subquery table's own id.
+    const balanceCents = sql<number>`(${accounts.initialBalanceCents}
+      + coalesce((
+          select sum(case when "transactions"."type" = 'income' then "transactions"."amount_cents" else -"transactions"."amount_cents" end)
+          from "transactions"
+          where "transactions"."account_id" = "accounts"."id" and "transactions"."user_id" = "accounts"."user_id"
+        ), 0)
+      + coalesce((
+          select sum("transfers"."amount_cents")
+          from "transfers"
+          where "transfers"."to_account_id" = "accounts"."id" and "transfers"."user_id" = "accounts"."user_id"
+        ), 0)
+      - coalesce((
+          select sum("transfers"."amount_cents")
+          from "transfers"
+          where "transfers"."from_account_id" = "accounts"."id" and "transfers"."user_id" = "accounts"."user_id"
+        ), 0)
+    )::float8`;
 
     return db
       .select({ ...getTableColumns(accounts), balanceCents })
@@ -125,7 +138,7 @@ export function createAccountsService(db: Database) {
       if (isInUseError(error)) {
         throw new AppError(
           "IN_USE",
-          "No se puede eliminar: tiene transacciones. Archívala en su lugar.",
+          "No se puede eliminar: tiene transacciones o transferencias. Archívala en su lugar.",
         );
       }
       throw error;

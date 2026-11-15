@@ -11,7 +11,7 @@ export function BottomNav() {
         <NavLink
             key={item.href}
             href={item.href}
-            label={item.label}
+            label={item.shortLabel ?? item.label}
             icon={<item.icon aria-hidden="true" className="size-5" />}
             variant="bottom"
           />

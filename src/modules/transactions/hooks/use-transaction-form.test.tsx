@@ -8,11 +8,14 @@ const tx = vi.hoisted(() => ({
   createTransactionAction: vi.fn(),
   updateTransactionAction: vi.fn(),
   deleteTransactionAction: vi.fn(),
+  listFrequentCategoriesAction: vi.fn(),
 }));
+const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const cat = vi.hoisted(() => ({ listCategoriesAction: vi.fn() }));
 
 vi.mock("../actions/transactions.actions", () => tx);
+vi.mock("sonner", () => ({ toast: toastMock }));
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/categories/actions/categories.actions", () => cat);
 
@@ -52,10 +55,17 @@ const existing: TransactionListItem = {
 describe("useTransactionForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-16T03:00:00Z")); // still Nov 15 in Lima
     acc.listAccountsAction.mockResolvedValue({ ok: true, data: accounts });
     cat.listCategoriesAction.mockResolvedValue({ ok: true, data: categories });
+    tx.listFrequentCategoriesAction.mockImplementation(async (type: string) => ({
+      ok: true,
+      data: categories
+        .filter((c) => c.kind === type)
+        .map((c) => ({ id: c.id, name: c.name, icon: c.icon, uses: 0 })),
+    }));
   });
 
   afterEach(() => {
@@ -214,5 +224,180 @@ describe("useTransactionForm", () => {
       ),
     );
     expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  describe("quick entry", () => {
+    const SECOND_ACCOUNT = "44444444-4444-4444-8444-444444444444";
+
+    it("starts with the type given by defaultType", async () => {
+      const { result } = renderHook(
+        () => useTransactionForm({ defaultType: "income", onSuccess: vi.fn() }),
+        { wrapper },
+      );
+
+      expect(result.current.type).toBe("income");
+      await waitFor(() =>
+        expect(result.current.frequentCategories.map((c) => c.name)).toEqual(["Sueldo"]),
+      );
+    });
+
+    it("preselects the only account when there is just one", async () => {
+      const { result } = renderHook(() => useTransactionForm({ onSuccess: vi.fn() }), { wrapper });
+
+      await waitFor(() => expect(result.current.form.getValues("accountId")).toBe(ACCOUNT_ID));
+    });
+
+    it("preselects the last account used when it is still active", async () => {
+      acc.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [...accounts, { id: SECOND_ACCOUNT, name: "Yape", type: "wallet", archivedAt: null, balanceCents: 0 }],
+      });
+      window.localStorage.setItem("finanzas:last-account", SECOND_ACCOUNT);
+      const { result } = renderHook(() => useTransactionForm({ onSuccess: vi.fn() }), { wrapper });
+
+      await waitFor(() => expect(result.current.form.getValues("accountId")).toBe(SECOND_ACCOUNT));
+    });
+
+    it("ignores a remembered account that is no longer active", async () => {
+      acc.listAccountsAction.mockResolvedValue({
+        ok: true,
+        data: [
+          ...accounts,
+          { id: SECOND_ACCOUNT, name: "Yape", type: "wallet", archivedAt: null, balanceCents: 0 },
+        ],
+      });
+      window.localStorage.setItem("finanzas:last-account", "55555555-5555-4555-8555-555555555555");
+      const { result } = renderHook(() => useTransactionForm({ onSuccess: vi.fn() }), { wrapper });
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.form.getValues("accountId")).toBe("");
+    });
+
+    it("does not preselect an account when editing", async () => {
+      const { result } = renderHook(
+        () => useTransactionForm({ transaction: existing, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.form.getValues("accountId")).toBe(existing.accountId);
+    });
+
+    it("shows chips when creating and the full select after choosing Más", async () => {
+      const { result } = renderHook(() => useTransactionForm({ onSuccess: vi.fn() }), { wrapper });
+      await waitFor(() => expect(result.current.frequentCategories.length).toBeGreaterThan(0));
+
+      expect(result.current.showChips).toBe(true);
+
+      act(() => result.current.showAllCategories());
+
+      expect(result.current.showChips).toBe(false);
+    });
+
+    it("never shows chips when editing", async () => {
+      const { result } = renderHook(
+        () => useTransactionForm({ transaction: existing, onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      expect(result.current.showChips).toBe(false);
+    });
+
+    it("remembers the account and shows a toast with the amount after saving", async () => {
+      tx.createTransactionAction.mockResolvedValue({ ok: true, data: {} });
+      const onSuccess = vi.fn();
+      const { result } = renderHook(() => useTransactionForm({ onSuccess }), { wrapper });
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      act(() => {
+        result.current.form.setValue("accountId", ACCOUNT_ID);
+        result.current.form.setValue("categoryId", FOOD_ID);
+        result.current.form.setValue("amount", "12.5");
+      });
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(window.localStorage.getItem("finanzas:last-account")).toBe(ACCOUNT_ID);
+      expect(toastMock.success).toHaveBeenCalledWith(expect.stringMatching(/Gasto guardado · S\/\s12\.50/));
+      expect(onSuccess).toHaveBeenCalled();
+    });
+
+    it("says Ingreso for income", async () => {
+      tx.createTransactionAction.mockResolvedValue({ ok: true, data: {} });
+      const { result } = renderHook(
+        () => useTransactionForm({ defaultType: "income", onSuccess: vi.fn() }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      act(() => {
+        result.current.form.setValue("accountId", ACCOUNT_ID);
+        result.current.form.setValue("categoryId", SALARY_ID);
+        result.current.form.setValue("amount", "3000");
+      });
+      await act(async () => {
+        await result.current.onSubmit();
+      });
+
+      expect(toastMock.success).toHaveBeenCalledWith(expect.stringMatching(/Ingreso guardado/));
+    });
+
+    it("save and add another keeps type, account and date and clears the rest", async () => {
+      tx.createTransactionAction.mockResolvedValue({ ok: true, data: {} });
+      const onSuccess = vi.fn();
+      const { result } = renderHook(() => useTransactionForm({ onSuccess }), { wrapper });
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+
+      act(() => {
+        result.current.form.setValue("accountId", ACCOUNT_ID);
+        result.current.form.setValue("categoryId", FOOD_ID);
+        result.current.form.setValue("amount", "8");
+        result.current.form.setValue("note", "Menú");
+        result.current.form.setValue("date", "2026-11-12");
+      });
+      await act(async () => {
+        await result.current.onSubmitAndAddAnother();
+      });
+
+      expect(tx.createTransactionAction).toHaveBeenCalledTimes(1);
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(toastMock.success).toHaveBeenCalled();
+      expect(result.current.form.getValues()).toEqual({
+        type: "expense",
+        accountId: ACCOUNT_ID,
+        categoryId: "",
+        amount: "",
+        date: "2026-11-12",
+        note: "",
+      });
+    });
+
+    it("does not toast, remember or close when saving fails", async () => {
+      tx.createTransactionAction.mockResolvedValue({
+        ok: false,
+        error: { code: "INTERNAL", message: "Ocurrió un error inesperado." },
+      });
+      const onSuccess = vi.fn();
+      const { result } = renderHook(() => useTransactionForm({ onSuccess }), { wrapper });
+      await waitFor(() => expect(result.current.isLoadingOptions).toBe(false));
+      window.localStorage.clear();
+
+      act(() => {
+        result.current.form.setValue("accountId", ACCOUNT_ID);
+        result.current.form.setValue("categoryId", FOOD_ID);
+        result.current.form.setValue("amount", "8");
+      });
+      await act(async () => {
+        await result.current.onSubmitAndAddAnother();
+      });
+
+      expect(toastMock.success).not.toHaveBeenCalled();
+      expect(window.localStorage.getItem("finanzas:last-account")).toBeNull();
+      expect(onSuccess).not.toHaveBeenCalled();
+      expect(result.current.form.getValues("amount")).toBe("8");
+      await waitFor(() => expect(result.current.submitError).toBe("Ocurrió un error inesperado."));
+    });
   });
 });

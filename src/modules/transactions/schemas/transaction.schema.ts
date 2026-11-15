@@ -1,17 +1,9 @@
 import { z } from "zod";
 
-import { isValidDateString } from "@/lib/dates";
 import { penToCents } from "@/lib/money";
-
-const MAX_CENTS = 1_000_000_000_00; // S/ 1,000,000,000.00
-const MIN_DATE = "2000-01-01";
+import { MAX_CENTS, dateString, noteInput } from "@/lib/validation";
 
 const type = z.enum(["income", "expense"], { error: "Elige un tipo" });
-
-const dateString = z
-  .string("Fecha inválida")
-  .refine(isValidDateString, "Fecha inválida")
-  .refine((v) => v >= MIN_DATE, "La fecha no puede ser anterior al año 2000");
 
 /** Server contract: amount in integer cents, optional note normalized to null. */
 export const transactionInputSchema = z.object({
@@ -24,12 +16,7 @@ export const transactionInputSchema = z.object({
     .min(1, "El monto debe ser mayor a 0")
     .max(MAX_CENTS, "Monto fuera de rango"),
   date: dateString,
-  note: z
-    .string()
-    .trim()
-    .max(280, "Máximo 280 caracteres")
-    .nullish()
-    .transform((v) => (v ? v : null)),
+  note: noteInput,
 });
 
 /** Form contract: the user types the amount in PEN ("12.50"). */

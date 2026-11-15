@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Controller } from "react-hook-form";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { EntitySelect } from "@/components/shared/entity-select";
 import { ErrorMessage } from "@/components/shared/error-message";
 import { FormField } from "@/components/shared/form-field";
 import { MoneyInput } from "@/components/shared/money-input";
@@ -17,59 +18,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet } from "lucide-react";
 
-import {
-  useTransactionForm,
-  type SelectOption,
-} from "../hooks/use-transaction-form";
+import { useTransactionForm } from "../hooks/use-transaction-form";
+import { CategoryChips } from "./category-chips";
 import type { TransactionListItem, TransactionType } from "../types/transaction.types";
-
-type EntitySelectProps = {
-  id: string;
-  value: string;
-  options: SelectOption[];
-  placeholder: string;
-  onChange: (value: string) => void;
-};
-
-function EntitySelect({ id, value, options, placeholder, onChange }: EntitySelectProps) {
-  const items = options.map((o) => ({ value: o.id, label: o.name }));
-  return (
-    <Select
-      items={items}
-      value={value || null}
-      onValueChange={(next) => onChange(next ?? "")}
-    >
-      <SelectTrigger id={id} className="h-11 w-full md:h-8">
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {items.map((item) => (
-          <SelectItem key={item.value} value={item.value}>
-            {item.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
 
 type TransactionFormProps = {
   transaction?: TransactionListItem;
+  defaultType: TransactionType;
   onClose: () => void;
 };
 
-function TransactionForm({ transaction, onClose }: TransactionFormProps) {
-  const t = useTransactionForm({ transaction, onSuccess: onClose });
+function TransactionForm({ transaction, defaultType, onClose }: TransactionFormProps) {
+  const t = useTransactionForm({ transaction, defaultType, onSuccess: onClose });
   const { errors } = t.form.formState;
 
   if (t.hasNoAccounts) {
@@ -118,6 +81,7 @@ function TransactionForm({ transaction, onClose }: TransactionFormProps) {
           render={({ field }) => (
             <MoneyInput
               id="tx-amount"
+              ref={field.ref}
               autoFocus
               value={field.value}
               onValueChange={field.onChange}
@@ -159,15 +123,24 @@ function TransactionForm({ transaction, onClose }: TransactionFormProps) {
         <Controller
           control={t.form.control}
           name="categoryId"
-          render={({ field }) => (
-            <EntitySelect
-              id="tx-category"
-              value={field.value}
-              options={t.categoryOptions}
-              placeholder="Elige una categoría"
-              onChange={field.onChange}
-            />
-          )}
+          render={({ field }) =>
+            t.showChips ? (
+              <CategoryChips
+                categories={t.frequentCategories}
+                value={field.value}
+                onChange={field.onChange}
+                onShowAll={t.showAllCategories}
+              />
+            ) : (
+              <EntitySelect
+                id="tx-category"
+                value={field.value}
+                options={t.categoryOptions}
+                placeholder="Elige una categoría"
+                onChange={field.onChange}
+              />
+            )
+          }
         />
       </FormField>
 
@@ -193,6 +166,17 @@ function TransactionForm({ transaction, onClose }: TransactionFormProps) {
         >
           Cancelar
         </Button>
+        {!t.isEditing && (
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-11 sm:min-h-8"
+            onClick={() => t.onSubmitAndAddAnother()}
+            disabled={t.isPending || t.isLoadingOptions}
+          >
+            Guardar y agregar otro
+          </Button>
+        )}
         <Button type="submit" className="min-h-11 sm:min-h-8" disabled={t.isPending || t.isLoadingOptions}>
           {t.isPending ? "Guardando..." : "Guardar"}
         </Button>
@@ -204,19 +188,22 @@ function TransactionForm({ transaction, onClose }: TransactionFormProps) {
 type TransactionFormDialogProps = {
   open: boolean;
   transaction?: TransactionListItem;
+  /** Type preselected when creating (default: expense). */
+  defaultType?: TransactionType;
   onClose: () => void;
 };
 
 export function TransactionFormDialog({
   open,
   transaction,
+  defaultType = "expense",
   onClose,
 }: TransactionFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto">
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
-        <TransactionForm transaction={transaction} onClose={onClose} />
+        <TransactionForm transaction={transaction} defaultType={defaultType} onClose={onClose} />
       </DialogContent>
     </Dialog>
   );

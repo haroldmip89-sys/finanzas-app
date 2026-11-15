@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createTestDb } from "../test-db";
-import { accounts, budgets, categories, transactions } from "./index";
+import { accounts, budgets, categories, transactions, transfers } from "./index";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -233,6 +233,97 @@ describe("schema constraints", () => {
       await expectConstraint(
         t.db.insert(budgets).values(row),
         "budgets_user_category_month_unique",
+      );
+    });
+  });
+
+  describe("transfers", () => {
+    function validTransfer(fromAccountId: string, toAccountId: string) {
+      return {
+        userId: USER_A,
+        fromAccountId,
+        toAccountId,
+        amountCents: 20000,
+        date: "2026-11-15",
+      };
+    }
+
+    it("inserts a valid transfer between two accounts of the same user", async () => {
+      const from = await seedAccount(USER_A, "BBVA");
+      const to = await seedAccount(USER_A, "Yape");
+
+      const [row] = await t.db
+        .insert(transfers)
+        .values(validTransfer(from.id, to.id))
+        .returning();
+
+      expect(row.amountCents).toBe(20000);
+    });
+
+    it("rejects amount <= 0", async () => {
+      const from = await seedAccount(USER_A, "BBVA");
+      const to = await seedAccount(USER_A, "Yape");
+
+      await expectConstraint(
+        t.db.insert(transfers).values({ ...validTransfer(from.id, to.id), amountCents: 0 }),
+        "transfers_amount_positive",
+      );
+    });
+
+    it("rejects a note longer than 280 characters", async () => {
+      const from = await seedAccount(USER_A, "BBVA");
+      const to = await seedAccount(USER_A, "Yape");
+
+      await expectConstraint(
+        t.db.insert(transfers).values({
+          ...validTransfer(from.id, to.id),
+          note: "x".repeat(281),
+        }),
+        "transfers_note_length",
+      );
+    });
+
+    it("rejects the same account as origin and destination", async () => {
+      const account = await seedAccount(USER_A, "BBVA");
+
+      await expectConstraint(
+        t.db.insert(transfers).values(validTransfer(account.id, account.id)),
+        "transfers_accounts_differ",
+      );
+    });
+
+    it("rejects an origin owned by another user", async () => {
+      const foreign = await seedAccount(USER_B, "Ajena");
+      const to = await seedAccount(USER_A, "Yape");
+
+      await expectConstraint(
+        t.db.insert(transfers).values(validTransfer(foreign.id, to.id)),
+        "transfers_from_account_owner_fk",
+      );
+    });
+
+    it("rejects a destination owned by another user", async () => {
+      const from = await seedAccount(USER_A, "BBVA");
+      const foreign = await seedAccount(USER_B, "Ajena");
+
+      await expectConstraint(
+        t.db.insert(transfers).values(validTransfer(from.id, foreign.id)),
+        "transfers_to_account_owner_fk",
+      );
+    });
+
+    it("blocks deleting an account used as origin or destination", async () => {
+      const from = await seedAccount(USER_A, "BBVA");
+      const to = await seedAccount(USER_A, "Yape");
+      await t.db.insert(transfers).values(validTransfer(from.id, to.id));
+
+      await expectConstraint(
+        t.db.delete(accounts).where(eq(accounts.id, from.id)),
+        "transfers_from_account_owner_fk",
+      );
+      await expectConstraint(
+        t.db.delete(accounts).where(eq(accounts.id, to.id)),
+        "transfers_to_account_owner_fk",
       );
     });
   });

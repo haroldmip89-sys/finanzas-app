@@ -10,7 +10,13 @@ import {
   transactionInputSchema,
 } from "../schemas/transaction.schema";
 import { transactionsService } from "../services/transactions.service";
-import type { Transaction, TransactionPage } from "../types/transaction.types";
+import { z } from "zod";
+
+import type {
+  FrequentCategory,
+  Transaction,
+  TransactionPage,
+} from "../types/transaction.types";
 
 export async function listTransactionsAction(
   filters?: unknown,
@@ -51,5 +57,16 @@ export async function deleteTransactionAction(
     const userId = await requireUserId();
     await transactionsService.remove(userId, transactionIdSchema.parse(id));
     return null;
+  });
+}
+
+const frequentCategoriesSchema = z.enum(["income", "expense"]);
+
+export async function listFrequentCategoriesAction(
+  type: unknown,
+): Promise<ActionResult<FrequentCategory[]>> {
+  return runAction(async () => {
+    const userId = await requireUserId();
+    return transactionsService.frequentCategories(userId, frequentCategoriesSchema.parse(type));
   });
 }

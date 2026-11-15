@@ -30,7 +30,7 @@ export function NavLink({ href, label, icon, variant }: NavLinkProps) {
         variant === "sidebar" &&
           "flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium",
         variant === "bottom" &&
-          "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium",
+          "flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-[11px] font-medium",
         variant === "sidebar" &&
           (active
             ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -42,7 +42,7 @@ export function NavLink({ href, label, icon, variant }: NavLinkProps) {
       )}
     >
       {icon}
-      <span>{label}</span>
+      <span className="max-w-full truncate">{label}</span>
     </Link>
   );
 }

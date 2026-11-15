@@ -30,3 +30,11 @@ export type TransactionPage = {
   /** Totals of the whole filtered set, not just the visible page. */
   totals: TransactionTotals;
 };
+
+/** A category with how many times it was used recently. */
+export type FrequentCategory = {
+  id: string;
+  name: string;
+  icon: string | null;
+  uses: number;
+};

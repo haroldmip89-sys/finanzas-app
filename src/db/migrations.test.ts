@@ -26,6 +26,7 @@ describe("migrations", () => {
       "budgets",
       "categories",
       "transactions",
+      "transfers",
     ]);
   });
 

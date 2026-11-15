@@ -18,9 +18,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project: Finanzas App
 
-Personal finance and expense tracker (single currency: **PEN**, soles). Personal use first, multi-user by design (Clerk auth, every row scoped by `user_id`). Stack on top of this template: **Clerk** (auth) + **Neon Postgres** with **Drizzle ORM** (no Supabase) + Zod.
+Personal finance app (single currency: **PEN**, soles) focused on spending control, avoiding impulse purchases and knowing how much money is really available to spend. Personal use first, multi-user by design (Clerk auth, every row scoped by `user_id`). Stack on top of this template: **Clerk** (auth) + **Neon Postgres** with **Drizzle ORM** (no Supabase) + Zod. Package manager: **npm**.
 
-MVP: accounts, categories, income/expense transactions with filters, transfers between accounts, monthly budgets per category, dashboard. UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light via a toggle (`next-themes`, preference stored in the browser; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. Transfers between own accounts are in scope (spec 005). Out of scope: multi-currency, recurring transactions, import/export, shared accounts.
+The product guide is `docs/BRIEF.md` (v0.2): priorities, roadmap and execution order are there. Done so far: specs 001 to 006 (auth, theme/layout, DB, accounts/categories, transactions, transfers, quick actions). Next in order: 006b (navigation to 4 destinations + bottom sheet), 007 (balance calibration), 007a (credit cards), 008 (budgets), 009a (available-to-spend), 009 (dashboard), 010 (hardening/deploy), then the P1 specs. UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light (`next-themes`; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. In grids, items with long text need `min-w-0` so `truncate` works. Out of scope: multi-currency, bank integrations, native app, shared accounts.
 
 Key rules (details in `docs/architecture/system-design.md`):
 
@@ -29,9 +29,9 @@ Key rules (details in `docs/architecture/system-design.md`):
 - Validate all input with Zod at the server boundary.
 - Archive (don't delete) accounts/categories that have transactions.
 
-Docs: `docs/BRIEF.md` (scope, stack, spec plan) · `docs/architecture/system-design.md` (entities, modules, data ownership) · `docs/SETUP.md` (code rules). Previous prototype `../app-finanzas` is a UI source to migrate from, not a code base.
+Docs: `docs/BRIEF.md` (vision, scope, priorities, roadmap) · `docs/architecture/system-design.md` (entities, modules, data ownership) · `docs/SETUP.md` (code rules). Previous prototype `../app-finanzas` is a UI source to migrate from, not a code base.
 
-Status: template scaffold only — Clerk, Neon/Drizzle and the domain modules are **not yet implemented**; build them through the spec plan in `docs/BRIEF.md §6`.
+Status: specs 001 to 006 are implemented and verified; see `docs/BRIEF.md §4` for what exists and `§10` for the roadmap and execution order.
 
 ## Architecture
 

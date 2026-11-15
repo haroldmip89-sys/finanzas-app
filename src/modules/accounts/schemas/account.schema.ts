@@ -1,10 +1,9 @@
 import { z } from "zod";
 
 import { penToCents } from "@/lib/money";
+import { MAX_CENTS } from "@/lib/validation";
 
 export const ACCOUNT_TYPES = ["cash", "bank", "card", "wallet"] as const;
-
-const MAX_CENTS = 1_000_000_000_00; // S/ 1,000,000,000.00
 
 const name = z
   .string()

@@ -85,6 +85,7 @@ src/modules/
   transactions/  -> depende de: accounts, categories, db
   budgets/       -> depende de: categories, transactions (lectura), db
   dashboard/     -> depende de: transactions, budgets, accounts (solo lectura)
+  quick-add/     -> depende de: transactions, transfers, accounts, categories (solo composición de UI)
 src/db/          -> `client.ts` (Neon + Drizzle), `schema/*.table.ts` (una tabla por archivo) y `schema/enums.ts`; migraciones en `drizzle/`
 src/lib/         -> utilidades (`money.ts` para formato PEN, `dates.ts`, `auth.ts` con `requireUserId()`)
 ```
@@ -120,3 +121,13 @@ Reglas: un módulo no importa de otro fuera de lo listado; los ciclos están pro
 | D4 | Sin multimoneda en el MVP | Reducir alcance; el modelo permite añadirla |
 | D6 | Las transferencias son una tabla aparte (`transfers`), no un tipo de transacción | No distorsionan ingresos, gastos ni presupuestos; sin categoría ficticia |
 | D5 | Archivar en vez de borrar cuentas/categorías con historial | Integridad histórica |
+
+## 9. Cambios de modelo previstos (no implementados)
+
+Anotados desde `docs/BRIEF.md §10 y §11`; cada uno se decide en su spec y requiere migración nueva.
+
+- **Ajustes de saldo (007):** forma de marcarlos para que no cuenten como ingresos ni gastos ni en presupuestos.
+- **Tarjetas de crédito (007a):** `accounts.type = 'card'` es una cuenta de crédito, no dinero líquido; necesitará día de cierre, día de pago y límite opcional, y una tabla de compras en cuotas (`installment_plans`) con sus vencimientos.
+- **Reservas y período de planificación (009a):** configuración del usuario para calcular el dinero disponible.
+- **Compras evitadas (010a):** tabla propia, sin relación con `transactions` y sin efecto en saldos.
+

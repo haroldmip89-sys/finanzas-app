@@ -1,15 +1,9 @@
 "use client";
 
+import { FilterSelect } from "@/components/shared/filter-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import type { FilterState } from "../hooks/use-transaction-filters";
 import type { TransactionType } from "../types/transaction.types";
@@ -25,45 +19,10 @@ type TransactionFiltersProps = {
   categoryOptions: Option[];
 };
 
-const ALL = "all";
-
 const TYPE_OPTIONS = [
-  { value: ALL, label: "Todos" },
   { value: "expense", label: "Gastos" },
   { value: "income", label: "Ingresos" },
 ];
-
-type FilterSelectProps = {
-  id: string;
-  label: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
-};
-
-function FilterSelect({ id, label, value, options, onChange }: FilterSelectProps) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <Select
-        items={options}
-        value={value || ALL}
-        onValueChange={(next) => onChange(next === ALL || next === null ? "" : next)}
-      >
-        <SelectTrigger id={id} className="h-11 w-full md:h-8">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 
 export function TransactionFilters({
   filters,
@@ -73,14 +32,8 @@ export function TransactionFilters({
   accountOptions,
   categoryOptions,
 }: TransactionFiltersProps) {
-  const accounts = [
-    { value: ALL, label: "Todas" },
-    ...accountOptions.map((a) => ({ value: a.id, label: a.name })),
-  ];
-  const categories = [
-    { value: ALL, label: "Todas" },
-    ...categoryOptions.map((c) => ({ value: c.id, label: c.name })),
-  ];
+  const accounts = accountOptions.map((a) => ({ value: a.id, label: a.name }));
+  const categories = categoryOptions.map((c) => ({ value: c.id, label: c.name }));
 
   return (
     <details className="group rounded-xl border border-border bg-card p-4 md:open:block" open>
@@ -121,6 +74,7 @@ export function TransactionFilters({
           label="Cuenta"
           value={filters.accountId}
           options={accounts}
+          allLabel="Todas"
           onChange={(v) => onChange("accountId", v)}
         />
         <FilterSelect
@@ -128,6 +82,7 @@ export function TransactionFilters({
           label="Categoría"
           value={filters.categoryId}
           options={categories}
+          allLabel="Todas"
           onChange={(v) => onChange("categoryId", v)}
         />
         <div className="flex items-end">

@@ -327,4 +327,89 @@ describe("transactions service", () => {
       ).rejects.toThrow();
     });
   });
+
+  describe("frequentCategories", () => {
+    const NOW = new Date("2026-11-15T15:00:00Z");
+
+    async function useCategory(
+      accountId: string,
+      category: { id: string },
+      times: number,
+      date = "2026-11-10",
+      userId = USER_A,
+      type: "income" | "expense" = "expense",
+    ) {
+      for (let i = 0; i < times; i++) {
+        await t.client.query(
+          `INSERT INTO transactions (user_id, account_id, category_id, type, amount_cents, date)
+           VALUES ($1, $2, $3, $4, 100, $5)`,
+          [userId, accountId, category.id, type, date],
+        );
+      }
+    }
+
+    it("orders by usage and fills with unused categories by name", async () => {
+      const { account } = await setup();
+      await seedCategory(USER_A, "expense", "Alfa");
+      const b = await seedCategory(USER_A, "expense", "Beta");
+      const c = await seedCategory(USER_A, "expense", "Gamma");
+      await useCategory(account.id, c, 3);
+      await useCategory(account.id, b, 1);
+
+      const result = await service.frequentCategories(USER_A, "expense", 6, NOW);
+
+      // "Comida" (from setup) and "Alfa" are unused: they follow by name.
+      expect(result.map((r) => r.name)).toEqual(["Gamma", "Beta", "Alfa", "Comida"]);
+      expect(result.map((r) => r.uses)).toEqual([3, 1, 0, 0]);
+    });
+
+    it("only returns categories of the requested type", async () => {
+      await setup();
+
+      const expense = await service.frequentCategories(USER_A, "expense", 6, NOW);
+      const income = await service.frequentCategories(USER_A, "income", 6, NOW);
+
+      expect(expense.map((r) => r.name)).toEqual(["Comida"]);
+      expect(income.map((r) => r.name)).toEqual(["Sueldo"]);
+    });
+
+    it("excludes archived categories", async () => {
+      const { expense } = await setup();
+      await t.client.exec(`UPDATE categories SET archived_at = now() WHERE id = '${expense.id}'`);
+
+      expect(await service.frequentCategories(USER_A, "expense", 6, NOW)).toEqual([]);
+    });
+
+    it("ignores transactions older than 90 days but keeps the category", async () => {
+      const { account, expense } = await setup();
+      const other = await seedCategory(USER_A, "expense", "Otra");
+      // 2026-08-16 is 91 days before 2026-11-15; 2026-08-17 is exactly 90.
+      await useCategory(account.id, expense, 5, "2026-08-16");
+      await useCategory(account.id, other, 1, "2026-08-17");
+
+      const result = await service.frequentCategories(USER_A, "expense", 6, NOW);
+
+      expect(result.map((r) => r.name)).toEqual(["Otra", "Comida"]);
+      expect(result.map((r) => r.uses)).toEqual([1, 0]);
+    });
+
+    it("never counts another user transactions or lists their categories", async () => {
+      const a = await setup(USER_A);
+      const b = await setup(USER_B);
+      await useCategory(b.account.id, b.expense, 9, "2026-11-10", USER_B);
+
+      const result = await service.frequentCategories(USER_A, "expense", 6, NOW);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: a.expense.id, uses: 0 });
+    });
+
+    it("returns at most the limit", async () => {
+      await setup();
+      for (let i = 0; i < 8; i++) await seedCategory(USER_A, "expense", `Cat ${i}`);
+
+      expect(await service.frequentCategories(USER_A, "expense", 6, NOW)).toHaveLength(6);
+      expect(await service.frequentCategories(USER_A, "expense", 3, NOW)).toHaveLength(3);
+    });
+  });
 });

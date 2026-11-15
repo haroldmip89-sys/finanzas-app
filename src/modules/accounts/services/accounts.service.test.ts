@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { categories, transactions } from "@/db/schema";
+import { categories, transactions, transfers } from "@/db/schema";
 import { createTestDb } from "@/db/test-db";
 import type { Database } from "@/db/types";
 import { AppError } from "@/lib/errors";
@@ -151,6 +151,58 @@ describe("accounts service", () => {
       expect(row.balanceCents).toBe(-21000);
     });
 
+    it("subtracts transfers sent and adds transfers received", async () => {
+      const bbva = await service.create(USER_A, { ...cash, name: "BBVA", initialBalanceCents: 100000 });
+      const yape = await service.create(USER_A, { ...cash, name: "Yape", initialBalanceCents: 0 });
+      await t.db.insert(transfers).values({
+        userId: USER_A,
+        fromAccountId: bbva.id,
+        toAccountId: yape.id,
+        amountCents: 20000,
+        date: "2026-11-15",
+      });
+      await addTransaction(yape.id, "expense", 1500);
+
+      const list = await service.list(USER_A);
+
+      expect(list.find((x) => x.name === "BBVA")?.balanceCents).toBe(80000);
+      expect(list.find((x) => x.name === "Yape")?.balanceCents).toBe(18500);
+    });
+
+    it("keeps the total across accounts unchanged by a transfer", async () => {
+      const a = await service.create(USER_A, { ...cash, name: "A", initialBalanceCents: 5000 });
+      const b = await service.create(USER_A, { ...cash, name: "B", initialBalanceCents: 7000 });
+      await t.db.insert(transfers).values({
+        userId: USER_A,
+        fromAccountId: a.id,
+        toAccountId: b.id,
+        amountCents: 1234,
+        date: "2026-11-15",
+      });
+
+      const total = (await service.list(USER_A)).reduce((sum, x) => sum + x.balanceCents, 0);
+
+      expect(total).toBe(12000);
+    });
+
+    it("never counts another user's transfers", async () => {
+      const own = await service.create(USER_A, { ...cash, name: "Propia" });
+      const otherFrom = await service.create(USER_B, { ...cash, name: "X" });
+      const otherTo = await service.create(USER_B, { ...cash, name: "Y" });
+      await t.db.insert(transfers).values({
+        userId: USER_B,
+        fromAccountId: otherFrom.id,
+        toAccountId: otherTo.id,
+        amountCents: 9999,
+        date: "2026-11-15",
+      });
+
+      const [row] = await service.list(USER_A);
+
+      expect(row.id).toBe(own.id);
+      expect(row.balanceCents).toBe(0);
+    });
+
     it("never counts another user's transactions", async () => {
       const a = await service.create(USER_A, cash);
       const other = await service.create(USER_B, cash);
@@ -237,6 +289,21 @@ describe("accounts service", () => {
       await service.remove(USER_A, a.id);
 
       expect(await service.list(USER_A, { includeArchived: true })).toHaveLength(0);
+    });
+
+    it("returns IN_USE when it has transfers", async () => {
+      const a = await service.create(USER_A, { ...cash, name: "A" });
+      const b = await service.create(USER_A, { ...cash, name: "B" });
+      await t.db.insert(transfers).values({
+        userId: USER_A,
+        fromAccountId: a.id,
+        toAccountId: b.id,
+        amountCents: 100,
+        date: "2026-11-15",
+      });
+
+      await expectAppError(service.remove(USER_A, b.id), "IN_USE");
+      await expectAppError(service.remove(USER_A, a.id), "IN_USE");
     });
 
     it("returns IN_USE when it has transactions", async () => {

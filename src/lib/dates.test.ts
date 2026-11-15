@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addDays,
   currentMonthRange,
   formatDate,
   isValidDateString,
@@ -67,5 +68,28 @@ describe("formatDate", () => {
 
   it("returns the input when it is not a valid date", () => {
     expect(formatDate("nope")).toBe("nope");
+  });
+});
+
+describe("addDays", () => {
+  it("goes back and forward", () => {
+    expect(addDays("2026-11-15", -1)).toBe("2026-11-14");
+    expect(addDays("2026-11-15", 1)).toBe("2026-11-16");
+    expect(addDays("2026-11-15", 0)).toBe("2026-11-15");
+  });
+
+  it("crosses month and year boundaries", () => {
+    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+    expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
+    expect(addDays("2026-01-01", -1)).toBe("2025-12-31");
+  });
+
+  it("handles leap years", () => {
+    expect(addDays("2028-03-01", -1)).toBe("2028-02-29");
+    expect(addDays("2027-03-01", -1)).toBe("2027-02-28");
+  });
+
+  it("subtracts 90 days", () => {
+    expect(addDays("2026-11-15", -90)).toBe("2026-08-17");
   });
 });

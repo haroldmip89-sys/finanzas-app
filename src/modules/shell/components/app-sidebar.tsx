@@ -2,6 +2,7 @@ import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { QuickAddNewButton } from "@/modules/quick-add/components/quick-add-new-button";
 
 import { navItems } from "../nav-items";
 import { NavLink } from "./nav-link";
@@ -13,6 +14,9 @@ export function AppSidebar() {
         <Link href="/dashboard" className="text-base font-semibold">
           Finanzas
         </Link>
+      </div>
+      <div className="px-2 pb-2">
+        <QuickAddNewButton />
       </div>
       <nav aria-label="Principal" className="flex-1 space-y-1 px-2 py-2">
         {navItems.map((item) => (

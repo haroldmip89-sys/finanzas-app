@@ -52,3 +52,10 @@ export function formatDate(value: string): string {
   const [year, month, day] = value.split("-").map(Number);
   return `${day} ${MONTHS[month - 1]} ${year}`;
 }
+
+/** Adds days to a "YYYY-MM-DD" day (negative to go back) without timezone shifts. */
+export function addDays(value: string, days: number): string {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + days));
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+}
