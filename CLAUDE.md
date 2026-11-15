@@ -20,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal finance app (single currency: **PEN**, soles) focused on spending control, avoiding impulse purchases and knowing how much money is really available to spend. Personal use first, multi-user by design (Clerk auth, every row scoped by `user_id`). Stack on top of this template: **Clerk** (auth) + **Neon Postgres** with **Drizzle ORM** (no Supabase) + Zod. Package manager: **npm**.
 
-The product guide is `docs/BRIEF.md` (v0.2): priorities, roadmap and execution order are there. Done so far: specs 001 to 006 (auth, theme/layout, DB, accounts/categories, transactions, transfers, quick actions). Next in order: 006b (navigation to 4 destinations + bottom sheet), 007 (balance calibration), 007a (credit cards), 008 (budgets), 009a (available-to-spend), 009 (dashboard), 010 (hardening/deploy), then the P1 specs. UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light (`next-themes`; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. In grids, items with long text need `min-w-0` so `truncate` works. Out of scope: multi-currency, bank integrations, native app, shared accounts.
+The product guide is `docs/BRIEF.md` (v0.2): priorities, roadmap and execution order are there. Done so far: every spec up to 010 (auth, theme/layout, DB, accounts/categories, transactions, transfers, quick actions, navigation, calibration, credit cards, budgets, available money, dashboard, Yupi! visual system, avoided purchases 010a, mindful purchase 010c, weekly summary 010b, hardening 010). Pending: apply migrations 0003 to 0005 to Neon and deploy (`docs/DEPLOY.md`), then 011 (PWA, postponed) and 007a-2 (installments, postponed). UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light (`next-themes`; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. In grids, items with long text need `min-w-0` so `truncate` works. Out of scope: multi-currency, bank integrations, native app, shared accounts.
 
 Key rules (details in `docs/architecture/system-design.md`):
 
@@ -31,7 +31,7 @@ Key rules (details in `docs/architecture/system-design.md`):
 
 Docs: `docs/BRIEF.md` (vision, scope, priorities, roadmap) · `docs/architecture/system-design.md` (entities, modules, data ownership) · `docs/SETUP.md` (code rules). Previous prototype `../app-finanzas` is a UI source to migrate from, not a code base.
 
-Status: specs 001 to 006 are implemented and verified; see `docs/BRIEF.md §4` for what exists and `§10` for the roadmap and execution order.
+Status: specs up to 010 are implemented and verified (lint, tests and build pass); see `docs/BRIEF.md §4` for what exists and `§10` for the roadmap. Migrations 0003 to 0005 are NOT applied to the real Neon database yet.
 
 ## Architecture
 
