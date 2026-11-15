@@ -16,9 +16,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:watch` — Vitest in watch mode.
 - Add a shadcn component: `npx shadcn@latest add <component>` (e.g. `input`, `table`, `dialog`)
 
+## Project: Finanzas App
+
+Personal finance and expense tracker (single currency: **PEN**, soles). Personal use first, multi-user by design (Clerk auth, every row scoped by `user_id`). Stack on top of this template: **Clerk** (auth) + **Neon Postgres** with **Drizzle ORM** (no Supabase) + Zod.
+
+MVP: accounts, categories, income/expense transactions with filters, monthly budgets per category, dashboard. UI must be fully responsive (mobile-first, 360 px up) and use a **dark theme by default**, switchable dark ↔ light via a toggle (`next-themes`, preference stored in the browser; nothing in Neon/Clerk). Semantic tokens only, no hardcoded colors. Out of scope: multi-currency, transfers, recurring transactions, import/export, shared accounts.
+
+Key rules (details in `docs/architecture/system-design.md`):
+
+- Money is stored as integer cents (`amount_cents`), never floats; one helper in `src/lib/money.ts` parses/formats PEN.
+- `userId` comes only from Clerk `auth()` on the server (`requireUserId()`); every query filters by it.
+- Validate all input with Zod at the server boundary.
+- Archive (don't delete) accounts/categories that have transactions.
+
+Docs: `docs/BRIEF.md` (scope, stack, spec plan) · `docs/architecture/system-design.md` (entities, modules, data ownership) · `docs/SETUP.md` (code rules). Previous prototype `../app-finanzas` is a UI source to migrate from, not a code base.
+
+Status: template scaffold only — Clerk, Neon/Drizzle and the domain modules are **not yet implemented**; build them through the spec plan in `docs/BRIEF.md §6`.
+
 ## Architecture
 
-This is a fresh `create-next-app` scaffold (App Router, TypeScript, Tailwind v4, `src/` layout) with a few libraries installed but not yet wired up — treat this as a template, not an established app with conventions to mimic.
+App Router, TypeScript, Tailwind v4, `src/` layout. Several libraries are installed but not yet wired up.
 
 - **Routing**: App Router under `src/app`. Path alias `@/*` → `./src/*` (see `tsconfig.json`).
 - **Styling**: Tailwind CSS v4 — there is no `tailwind.config.ts`; theme tokens (colors, radii, fonts) are defined in `src/app/globals.css` via `@theme inline` and CSS custom properties, with light/dark values under `:root` and `.dark`.
@@ -45,12 +62,12 @@ When adding any of the above, prefer wiring minimal, idiomatic setup (e.g. a sin
 | Agent | Role |
 |---|---|
 | `orchestrator` | Entry point for any non-trivial task. Decides **SDD vs. direct build mode**, splits work into session-sized phases, defines which tasks can run in parallel, and drives the spec → developer → reviewer cycle. |
-| `spec` | Writes `docs/specs/<NNN>-<slug>.md` (scope, inventory of existing code to reuse, contracts, tasks with file ownership, acceptance criteria, required tests). Always saves as `Estado: draft`. |
+| `spec` | Writes `docs/specs/<NNN>-<slug>.md` (scope, inventory of existing code to reuse, contracts, tasks with file ownership, acceptance criteria, required tests). Always saves as `Estado: borrador`. |
 | `developer` | Implements one task of an **approved** spec, only within its assigned files, plus required tests. Refuses (`BLOCKED`) if the spec is not approved. |
-| `reviewer` | Read-only. Validates the diff against the spec and `docs/SETUP.md`, runs lint/test/build, returns `APPROVED` or `CHANGES_REQUESTED`. |
+| `reviewer` | Read-only. Validates the diff against the spec, `docs/SETUP.md` and `docs/architecture/`, runs lint/test/build, returns `APPROVED` or `CHANGES_REQUESTED`. |
 
 **Flow:** `orchestrator` → `spec` (draft) → **human approval** → `developer` (parallel tasks in a single message) → `reviewer` → on `CHANGES_REQUESTED`, send only the findings back to `developer` (or to `spec` if `origen: spec`) and re-review; max 3 iterations, then escalate to the user.
 
-- **Human approval is a hard gate.** Never launch `developer` until the user has explicitly approved the spec; only then set `Estado: approved` (then `in-progress` when launching developers, `done` after `APPROVED`). Silence or "it's small" is not approval. A spec edited after approval goes back to `draft` and needs approval again.
+- **Human approval is a hard gate.** Never launch `developer` until the user has explicitly approved the spec; only then set `Estado: aprobada` (then `en progreso` when launching developers, `hecha` after `APPROVED`). Silence or "it's small" is not approval. A spec edited after approval goes back to `borrador` and needs approval again.
 - **Parallel tasks must not conflict:** disjoint file ownership per task; dependency installs, configs, `src/app/layout.tsx`, `src/lib/**`, `src/components/ui/**` and shared contracts run serially first. During the parallel block nobody runs `npm install` or `npm run build` (shared `node_modules/` and `.next/`); the reviewer runs the full build at the end.
 - Subagents can't always spawn subagents: if `orchestrator` returns an execution plan instead of running it, the main thread drives the flow above, including asking the user for spec approval.

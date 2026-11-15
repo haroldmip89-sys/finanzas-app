@@ -116,7 +116,7 @@ El flujo se divide en 4 roles:
 1. **Orquestador** — recibe el requerimiento, lo descompone en tareas, decide el orden de trabajo y coordina el handoff entre los demás roles. No escribe la spec ni el código; distribuye y da seguimiento al trabajo.
 2. **Spec** — a partir del requerimiento, redacta la especificación: qué debe hacer la funcionalidad, qué módulo(s) de dominio involucra (ver sección 1), contratos de datos (types/schemas), y criterios de aceptación. La spec es la fuente de verdad para developer y reviewer.
 3. **Developer** — implementa la spec siguiendo las reglas de estructura de carpetas (sección 1) y las buenas prácticas (sección 2). Incluye unit tests para las partes que lo requieran (ver abajo).
-   - **Bloqueante:** el developer no empieza hasta que un humano apruebe la spec (`Estado: approved`). Una spec modificada después de aprobada vuelve a `draft` y requiere nueva aprobación.
+   - **Bloqueante:** el developer no empieza hasta que un humano apruebe la spec (`Estado: aprobada`). Una spec modificada después de aprobada vuelve a `borrador` y requiere nueva aprobación.
 4. **Reviewer** — audita el resultado contra la spec: ¿cumple el criterio de aceptación?, ¿respeta la estructura modular?, ¿aplica SOLID/DRY/KISS/YAGNI?, ¿tiene los tests necesarios? Si algo no cumple, regresa al developer (o a spec, si el problema es de la especificación misma).
 
 ### Unit testing
@@ -127,3 +127,23 @@ Se usa **Vitest + React Testing Library**. No todo requiere test unitario — se
 - **No necesariamente requieren test unitario:** componentes puramente presentacionales (reciben props, renderizan JSX sin lógica), páginas de `src/app` (son composición, no lógica).
 
 La spec de cada feature debe indicar qué partes caen en el primer grupo, para que developer y reviewer sepan qué tests son obligatorios antes de considerar la tarea terminada.
+
+---
+
+## 4. Documentación de arquitectura
+
+El alcance del producto vive en `docs/BRIEF.md` y la arquitectura en `docs/architecture/`. Lee **solo la sección que necesitas**, no el documento completo, y cítala como `system-design.md §N`.
+
+| Tema | Archivo y sección |
+|---|---|
+| Visión, alcance del MVP y plan de specs | `docs/BRIEF.md §1`, `§2`, `§6` |
+| Principios de robustez (dinero, fechas, aislamiento) | `docs/BRIEF.md §5` |
+| Entidades, relaciones e invariantes | `docs/architecture/system-design.md §2` |
+| Propiedad de datos (Neon / Clerk) | `docs/architecture/system-design.md §3` |
+| Módulos y dependencias permitidas | `docs/architecture/system-design.md §4` |
+| Capa de datos y acceso (Drizzle, `requireUserId`) | `docs/architecture/system-design.md §5` |
+| Auth y permisos | `docs/architecture/system-design.md §6` |
+| Moneda (PEN) y formato | `docs/architecture/system-design.md §7` |
+| Decisiones registradas | `docs/architecture/system-design.md §8` |
+
+Cualquier cambio de arquitectura (entidades, módulos, propiedad de datos) requiere una spec aprobada y la actualización de estos documentos y de esta tabla.
