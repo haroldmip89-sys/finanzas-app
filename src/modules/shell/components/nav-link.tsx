@@ -6,20 +6,22 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { isActive } from "../nav-items";
+import { isItemActive } from "../nav-items";
 
 type NavLinkProps = {
   href: string;
   label: string;
+  /** Other routes that also mark this link as active. */
+  matches?: string[];
   // Rendered by the server component: components (functions) cannot cross
   // the server/client boundary, elements can.
   icon: ReactNode;
   variant: "sidebar" | "bottom";
 };
 
-export function NavLink({ href, label, icon, variant }: NavLinkProps) {
+export function NavLink({ href, label, matches, icon, variant }: NavLinkProps) {
   const pathname = usePathname();
-  const active = isActive(pathname, href);
+  const active = isItemActive(pathname, { href, matches });
 
   return (
     <Link

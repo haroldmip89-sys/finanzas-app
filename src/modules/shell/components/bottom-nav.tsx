@@ -9,12 +9,13 @@ export function BottomNav() {
     >
       {navItems.map((item) => (
         <NavLink
-            key={item.href}
-            href={item.href}
-            label={item.shortLabel ?? item.label}
-            icon={<item.icon aria-hidden="true" className="size-5" />}
-            variant="bottom"
-          />
+          key={item.href}
+          href={item.href}
+          label={item.label}
+          matches={item.matches}
+          icon={<item.icon aria-hidden="true" className="size-5" />}
+          variant="bottom"
+        />
       ))}
     </nav>
   );

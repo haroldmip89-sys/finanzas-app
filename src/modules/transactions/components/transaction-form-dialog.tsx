@@ -201,7 +201,7 @@ export function TransactionFormDialog({
 }: TransactionFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto">
+      <DialogContent sheet>
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
         <TransactionForm transaction={transaction} defaultType={defaultType} onClose={onClose} />
       </DialogContent>

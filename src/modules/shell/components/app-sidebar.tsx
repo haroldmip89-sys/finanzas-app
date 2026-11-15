@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { QuickAddNewButton } from "@/modules/quick-add/components/quick-add-new-button";
 
-import { navItems } from "../nav-items";
+import { navItems, settingsItem } from "../nav-items";
 import { NavLink } from "./nav-link";
 
 export function AppSidebar() {
@@ -24,11 +24,21 @@ export function AppSidebar() {
             key={item.href}
             href={item.href}
             label={item.label}
+            matches={item.matches}
             icon={<item.icon aria-hidden="true" className="size-5" />}
             variant="sidebar"
           />
         ))}
       </nav>
+      <div className="px-2 pb-2">
+        <NavLink
+          href={settingsItem.href}
+          label={settingsItem.label}
+          matches={settingsItem.matches}
+          icon={<settingsItem.icon aria-hidden="true" className="size-5" />}
+          variant="sidebar"
+        />
+      </div>
       <div className="flex items-center justify-between border-t border-sidebar-border p-3">
         <UserButton />
         <ThemeToggle />

@@ -39,13 +39,19 @@ function DialogOverlay({
   )
 }
 
+const SHEET_CLASSES =
+  "max-h-[90dvh] overflow-y-auto max-md:top-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:max-w-none max-md:sm:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-b-none max-md:rounded-t-2xl max-md:max-h-[92dvh] max-md:pb-[calc(1rem+env(safe-area-inset-bottom))] max-md:data-open:zoom-in-100 max-md:data-open:slide-in-from-bottom max-md:data-closed:zoom-out-100 max-md:data-closed:slide-out-to-bottom"
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  sheet = false,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
+  /** Below 768px the panel is anchored to the bottom, full width (bottom sheet). */
+  sheet?: boolean
 }) {
   return (
     <DialogPortal>
@@ -54,6 +60,7 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          sheet && SHEET_CLASSES,
           className
         )}
         {...props}

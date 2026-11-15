@@ -147,7 +147,7 @@ export function CategoryFormDialog({
 }: CategoryFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent>
+      <DialogContent sheet>
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
         <CategoryForm category={category} defaultKind={defaultKind} onClose={onClose} />
       </DialogContent>

@@ -164,7 +164,7 @@ type TransferFormDialogProps = {
 export function TransferFormDialog({ open, transfer, onClose }: TransferFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto">
+      <DialogContent sheet>
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
         <TransferForm transfer={transfer} onClose={onClose} />
       </DialogContent>

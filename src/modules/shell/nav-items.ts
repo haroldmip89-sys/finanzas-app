@@ -1,8 +1,7 @@
 import {
-  ArrowLeftRight,
   LayoutDashboard,
   Receipt,
-  Tags,
+  Settings,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -10,21 +9,35 @@ import {
 export type NavItem = {
   href: string;
   label: string;
-  /** Shorter label for the bottom bar, where space is tight. */
-  shortLabel?: string;
   icon: LucideIcon;
+  /** Other routes that also mark this destination as active. */
+  matches?: string[];
 };
 
-// Cada spec de módulo agrega aquí su entrada cuando su ruta exista.
+// Cada spec agrega aquí su destino cuando exista (Análisis llega con la 008).
 export const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transactions", label: "Transacciones", shortLabel: "Movimientos", icon: Receipt },
-  { href: "/transfers", label: "Transferencias", shortLabel: "Transferir", icon: ArrowLeftRight },
+  { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+  { href: "/transactions", label: "Movimientos", icon: Receipt, matches: ["/transfers"] },
   { href: "/accounts", label: "Cuentas", icon: Wallet },
-  { href: "/categories", label: "Categorías", icon: Tags },
 ];
+
+// Ajustes no va en la barra inferior: se llega con el engranaje o el menú lateral.
+export const settingsItem: NavItem = {
+  href: "/settings",
+  label: "Ajustes",
+  icon: Settings,
+  matches: ["/categories"],
+};
 
 export function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** True when the route is the item's own or one of its extra routes. */
+export function isItemActive(
+  pathname: string,
+  item: { href: string; matches?: string[] },
+): boolean {
+  return [item.href, ...(item.matches ?? [])].some((href) => isActive(pathname, href));
 }

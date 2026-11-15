@@ -85,6 +85,7 @@ src/modules/
   transactions/  -> depende de: accounts, categories, db
   budgets/       -> depende de: categories, transactions (lectura), db
   dashboard/     -> depende de: transactions, budgets, accounts (solo lectura)
+  settings/      -> depende de: (solo enlaces a otras páginas; sin datos propios)
   quick-add/     -> depende de: transactions, transfers, accounts, categories (solo composición de UI)
 src/db/          -> `client.ts` (Neon + Drizzle), `schema/*.table.ts` (una tabla por archivo) y `schema/enums.ts`; migraciones en `drizzle/`
 src/lib/         -> utilidades (`money.ts` para formato PEN, `dates.ts`, `auth.ts` con `requireUserId()`)

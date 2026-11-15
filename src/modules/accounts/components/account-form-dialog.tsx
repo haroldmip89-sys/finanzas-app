@@ -133,7 +133,7 @@ type AccountFormDialogProps = {
 export function AccountFormDialog({ open, account, onClose }: AccountFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent>
+      <DialogContent sheet>
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
         <AccountForm account={account} onClose={onClose} />
       </DialogContent>

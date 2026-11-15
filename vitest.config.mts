@@ -8,6 +8,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // Many files boot an in-memory Postgres (PGlite) in parallel; give hooks room.
+    hookTimeout: 30_000,
     setupFiles: ["./vitest.setup.ts"],
   },
 });
