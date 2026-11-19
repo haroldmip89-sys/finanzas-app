@@ -36,7 +36,7 @@ export function ResourceCard({
       className={cn(
         // min-w-0: as a grid item the card must be allowed to shrink below its text,
         // otherwise `truncate` never applies and the page overflows on mobile.
-        "flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-card p-4 pr-2 text-card-foreground",
+        "flex min-w-0 select-none items-center gap-3 rounded-2xl border border-border bg-card p-4 pr-2 text-card-foreground",
         archived && "opacity-60",
       )}
     >
