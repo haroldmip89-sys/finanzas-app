@@ -1,5 +1,4 @@
 import { ResourceCard, type ResourceAction } from "@/components/shared/resource-card";
-import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/dates";
 import { formatPen } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -18,7 +17,6 @@ export function TransactionRow({ transaction, onEdit, onDelete }: TransactionRow
   const details = [
     formatDate(transaction.date),
     transaction.accountName,
-    transaction.note,
   ].filter(Boolean);
 
   // Balance adjustments cannot be edited (delete it and calibrate again).
@@ -40,7 +38,6 @@ export function TransactionRow({ transaction, onEdit, onDelete }: TransactionRow
           {formatPen(transaction.amountCents)}
         </span>
       }
-      badge={transaction.isAdjustment ? <Badge variant="outline">Ajuste</Badge> : undefined}
       actions={actions}
       menuLabel={`Acciones de ${transaction.categoryName} del ${formatDate(transaction.date)}`}
     />
