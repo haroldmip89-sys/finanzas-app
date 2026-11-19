@@ -1,5 +1,5 @@
 "use client";
-
+import { ChevronDown } from "lucide-react";
 import { FilterSelect } from "@/components/shared/filter-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ type TransferFiltersProps = {
   isFiltered: boolean;
   accountOptions: { id: string; name: string }[];
 };
-
 export function TransferFilters({
   filters,
   onChange,
@@ -23,48 +22,26 @@ export function TransferFilters({
   accountOptions,
 }: TransferFiltersProps) {
   return (
-    <details className="group rounded-xl border border-border bg-card p-4 md:open:block" open>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-medium md:hidden">
-        Filtros
-        {isFiltered && <span className="text-xs text-muted-foreground">Activos</span>}
+    <details className="group rounded-xl border border-border bg-card p-4">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between font-medium [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center gap-2">
+          Filtros
+          {isFiltered && <span className="text-xs font-normal text-muted-foreground">Activos</span>}
+        </span>
+        <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
       </summary>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 md:mt-0 md:grid-cols-4">
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
         <div className="space-y-1.5">
           <Label htmlFor="transfer-filter-from">Desde</Label>
-          <Input
-            id="transfer-filter-from"
-            type="date"
-            value={filters.from}
-            onChange={(e) => onChange("from", e.target.value)}
-          />
+          <Input id="transfer-filter-from" type="date" value={filters.from} onChange={(e) => onChange("from", e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="transfer-filter-to">Hasta</Label>
-          <Input
-            id="transfer-filter-to"
-            type="date"
-            value={filters.to}
-            onChange={(e) => onChange("to", e.target.value)}
-          />
+          <Input id="transfer-filter-to" type="date" value={filters.to} onChange={(e) => onChange("to", e.target.value)} />
         </div>
-        <FilterSelect
-          id="transfer-filter-account"
-          label="Cuenta (origen o destino)"
-          value={filters.accountId}
-          allLabel="Todas"
-          options={accountOptions.map((a) => ({ value: a.id, label: a.name }))}
-          onChange={(v) => onChange("accountId", v)}
-        />
+        <FilterSelect id="transfer-filter-account" label="Cuenta (origen o destino)" value={filters.accountId} allLabel="Todas" options={accountOptions.map((a) => ({ value: a.id, label: a.name }))} onChange={(v) => onChange("accountId", v)} />
         <div className="flex items-end">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={onReset}
-            disabled={!isFiltered}
-          >
-            Limpiar
-          </Button>
+          <Button type="button" variant="outline" className="w-full" onClick={onReset} disabled={!isFiltered}>Limpiar</Button>
         </div>
       </div>
     </details>
