@@ -158,5 +158,6 @@ El alcance del producto vive en `docs/BRIEF.md` y la arquitectura en `docs/archi
 | Auth y permisos | `docs/architecture/system-design.md §6` |
 | Moneda (PEN) y formato | `docs/architecture/system-design.md §7` |
 | Decisiones registradas | `docs/architecture/system-design.md §8` |
+| Despliegue, variables, migraciones y prueba de humo | `docs/DEPLOY.md` |
 
 Cualquier cambio de arquitectura (entidades, módulos, propiedad de datos) requiere una spec aprobada y la actualización de estos documentos y de esta tabla.

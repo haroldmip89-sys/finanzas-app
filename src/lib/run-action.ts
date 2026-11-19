@@ -9,6 +9,7 @@ import {
   pgErrorCode,
   type FieldErrors,
 } from "./errors";
+import { describeErrorForLog } from "./safe-log";
 
 const INTERNAL_MESSAGE = "Ocurrió un error inesperado. Inténtalo de nuevo.";
 
@@ -47,7 +48,8 @@ export function toActionError(error: unknown): ActionError {
       message: "El registro está en uso y no se puede modificar así.",
     };
   }
-  console.error("[action] unexpected error", error);
+  // Never the raw error: it can carry the values the user typed (see safe-log.ts).
+  console.error("[action] unexpected error", describeErrorForLog(error));
   return { code: "INTERNAL", message: INTERNAL_MESSAGE };
 }
 

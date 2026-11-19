@@ -66,6 +66,17 @@ describe("runAction", () => {
     expect(console.error).toHaveBeenCalled();
   });
 
+  it("does not log the values of a failed query", async () => {
+    await runAction(async () => {
+      throw new Error('Failed query: insert into "accounts" ("name") values ($1)\nparams: Mi cuenta,9900');
+    });
+
+    const logged = JSON.stringify(vi.mocked(console.error).mock.calls);
+    expect(logged).toContain("Failed query");
+    expect(logged).not.toContain("Mi cuenta");
+    expect(logged).not.toContain("9900");
+  });
+
   it("re-throws Next.js control-flow exceptions", async () => {
     await expect(
       runAction(async () => {
