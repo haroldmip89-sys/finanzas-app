@@ -2,7 +2,7 @@
 
 - **Fecha:** 18 de noviembre de 2026
 - **Autor:** ChatGPT (OpenAI), agente de IA
-- **Estado:** Propuesta / pendiente de implementación
+- **Estado:** Reemplazada por `017-dashboard-insights.md`
 - **Destino:** Claude Code (implementador)
 
 ## Contexto

@@ -177,11 +177,12 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | 1 | 006b | Navegación a 4 destinos y formularios como bottom sheet en móvil | P0 | Hecha |
 | 2 | 007 | Calibración de saldos (ajuste, fuera de ingresos y gastos) | P0 | Hecha |
 | 3 | 007a-1 | Tarjetas de crédito (versión ligera): deuda, totales líquido y deuda, compras con tarjeta del mes, pagar tarjeta; sin fechas ni cuotas | P1 | Hecha |
-| 4 | 012 | Base visual con Artifact Design (prompt en `docs/design/`, spec 012-ui-foundation): tokens, componentes y pantallas existentes, sin cambiar el comportamiento | — | Spec escrita, esperando el diseño |
+| 4 | 012 | Base visual con Artifact Design (prompt en `docs/design/`, spec 012-ui-foundation): tokens, componentes y pantallas existentes, sin cambiar el comportamiento | — | Hecha |
 | — | 007a-2 | Compras en cuotas, vencimientos, intereses y devoluciones | — | Pospuesta (solo si se necesita) |
 | 5 | 008 | Presupuestos mensuales por categoría | P1 | Hecha |
-| 6 | 009a | Dinero disponible (fórmula, explicación, reservas, obligaciones) | P0 | Pendiente (nuevo) |
-| 7 | 009 | Dashboard orientado a decisiones | P0 | Pendiente |
+| 6 | 009a | Dinero disponible (fórmula, explicación, reservas, obligaciones) | P0 | Hecha |
+| 7 | 009 | Dashboard orientado a decisiones | P0 | Hecha |
+| — | 017 | Dashboard: presupuestos en el dinero disponible y evolución del gasto (spec 017-dashboard-insights) | P1 | Spec escrita, por aprobar |
 | 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Pendiente, antes de desplegar |
 | 9 | 010a | Compras impulsivas evitadas | P1 | Pendiente (nuevo) |
 | 10 | 010c | Compra consciente | P1 | Pendiente (nuevo) |

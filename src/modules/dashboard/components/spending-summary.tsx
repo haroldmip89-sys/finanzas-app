@@ -1,20 +1,16 @@
 "use client";
 
 import { ErrorMessage } from "@/components/shared/error-message";
-import { addMonths, currentMonthKey, formatMonth } from "@/lib/dates";
 import { formatPen } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { describeSpendingChange } from "@/modules/accounts/card-summary";
 
 import { groupTopCategories } from "../dashboard-math";
 import { useSpendingSummary } from "../hooks/use-spending-summary";
+import { previousMonthName } from "../month-labels";
 import { DashboardSection, SectionSkeleton } from "./dashboard-section";
 
 const COLORS = ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4", "bg-chart-5"];
-
-function previousMonthName(): string {
-  return formatMonth(addMonths(currentMonthKey(), -1)).split(" ")[0];
-}
 
 /** Spending of the month so far, how it compares and where it went. */
 export function SpendingSummary() {

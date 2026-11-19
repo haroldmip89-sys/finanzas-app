@@ -159,4 +159,95 @@ describe("dashboard service", () => {
     expect(result.previousCents).toBe(1000);
     expect(result.currentCents).toBe(400);
   });
+  describe("dailySpending", () => {
+    it("has one value per day, with zeros where nothing was spent", async () => {
+      const acc = await seedAccount();
+      const food = await seedCategory();
+      await add(acc.id, food.id, 1000, "2026-11-02");
+      await add(acc.id, food.id, 500, "2026-11-02");
+      await add(acc.id, food.id, 2000, "2026-11-15");
+      await add(acc.id, food.id, 700, "2026-10-01");
+      await add(acc.id, food.id, 300, "2026-10-15");
+
+      const result = await service.dailySpending(USER_A, NOW);
+
+      expect(result.currentDaily).toHaveLength(15);
+      expect(result.currentDaily[0]).toBe(0);
+      expect(result.currentDaily[1]).toBe(1500);
+      expect(result.currentDaily[14]).toBe(2000);
+      expect(result.previousDaily).toHaveLength(15);
+      expect(result.previousDaily[0]).toBe(700);
+      expect(result.previousDaily[14]).toBe(300);
+    });
+
+    it("leaves out what is after today and after the same day of last month", async () => {
+      const acc = await seedAccount();
+      const food = await seedCategory();
+      await add(acc.id, food.id, 111, "2026-11-16");
+      await add(acc.id, food.id, 222, "2026-10-16");
+      await add(acc.id, food.id, 333, "2026-09-30");
+
+      const result = await service.dailySpending(USER_A, NOW);
+
+      expect(result.currentDaily.reduce((a, b) => a + b, 0)).toBe(0);
+      expect(result.previousDaily.reduce((a, b) => a + b, 0)).toBe(0);
+    });
+
+    it("does not count income, balance adjustments or transfers", async () => {
+      const acc = await seedAccount();
+      const other = await seedAccount(USER_A, "Efectivo");
+      const food = await seedCategory();
+      const salary = await seedCategory(USER_A, "Sueldo", "income");
+      const adjustment = await seedCategory(USER_A, "Ajuste", "expense", "adjustment_expense");
+      await add(acc.id, food.id, 1000, "2026-11-03");
+      await add(acc.id, salary.id, 300000, "2026-11-03", "income");
+      await add(acc.id, adjustment.id, 4000, "2026-11-03");
+      await t.db.insert(transfers).values({
+        userId: USER_A,
+        fromAccountId: acc.id,
+        toAccountId: other.id,
+        amountCents: 5000,
+        date: "2026-11-03",
+      });
+
+      const result = await service.dailySpending(USER_A, NOW);
+
+      expect(result.currentDaily[2]).toBe(1000);
+      expect(result.currentDaily.reduce((a, b) => a + b, 0)).toBe(1000);
+    });
+
+    it("only sees the user's own data", async () => {
+      const mine = await seedAccount(USER_A);
+      const theirs = await seedAccount(USER_B, "Otra");
+      const foodA = await seedCategory(USER_A);
+      const foodB = await seedCategory(USER_B);
+      await add(mine.id, foodA.id, 1000, "2026-11-02");
+      await add(theirs.id, foodB.id, 777000, "2026-11-02", "expense", USER_B);
+
+      const result = await service.dailySpending(USER_A, NOW);
+
+      expect(result.currentDaily[1]).toBe(1000);
+    });
+
+    it("compares 31 March with the whole of February (28 days)", async () => {
+      const acc = await seedAccount();
+      const food = await seedCategory();
+      await add(acc.id, food.id, 1000, "2027-02-28");
+      await add(acc.id, food.id, 400, "2027-03-31");
+
+      const result = await service.dailySpending(USER_A, new Date("2027-03-31T15:00:00Z"));
+
+      expect(result.currentDaily).toHaveLength(31);
+      expect(result.currentDaily[30]).toBe(400);
+      expect(result.previousDaily).toHaveLength(28);
+      expect(result.previousDaily[27]).toBe(1000);
+    });
+
+    it("is all zeros for a user without data", async () => {
+      const result = await service.dailySpending(USER_A, NOW);
+
+      expect(result.currentDaily).toEqual(Array.from({ length: 15 }, () => 0));
+      expect(result.previousDaily).toEqual(Array.from({ length: 15 }, () => 0));
+    });
+  });
 });

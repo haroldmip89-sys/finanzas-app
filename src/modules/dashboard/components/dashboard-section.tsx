@@ -17,7 +17,7 @@ export function DashboardSection({ title, aside, className, children }: Dashboar
     <section
       aria-label={title}
       className={cn(
-        "min-w-0 space-y-3 rounded-[20px] border border-border bg-card p-4 text-card-foreground md:p-5",
+        "min-w-0 space-y-3 rounded-[20px] border border-border bg-card p-4 text-card-foreground select-none md:p-5",
         className,
       )}
     >

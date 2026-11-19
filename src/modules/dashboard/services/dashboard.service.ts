@@ -1,11 +1,11 @@
-import { and, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, lte, or, sql } from "drizzle-orm";
 
 import { db as defaultDb } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import type { Database } from "@/db/types";
 
-import { comparableRanges } from "../dashboard-math";
-import type { SpendingSummary } from "../types/dashboard.types";
+import { comparableRanges, toDailySeries } from "../dashboard-math";
+import type { DailySpending, SpendingSummary } from "../types/dashboard.types";
 
 export function createDashboardService(db: Database) {
   /**
@@ -53,7 +53,45 @@ export function createDashboardService(db: Database) {
     };
   }
 
-  return { spendingSummary };
+  /**
+   * Spending per day of this month (day 1 to today) and of last month (day 1
+   * to the same day number), with 0 on days without spending. One query.
+   */
+  async function dailySpending(
+    userId: string,
+    now: Date = new Date(),
+  ): Promise<DailySpending> {
+    const { current, previous } = comparableRanges(now);
+    const day = sql<string>`${transactions.date}::text`;
+    const spent = sql<number>`sum(${transactions.amountCents})::float8`;
+
+    const rows = await db
+      .select({ date: day, cents: spent })
+      .from(transactions)
+      .innerJoin(categories, eq(categories.id, transactions.categoryId))
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          eq(transactions.type, "expense"),
+          isNull(categories.systemKey),
+          or(
+            and(gte(transactions.date, current.from), lte(transactions.date, current.to)),
+            and(gte(transactions.date, previous.from), lte(transactions.date, previous.to)),
+          ),
+        ),
+      )
+      .groupBy(day);
+
+    const length = (range: { from: string; to: string }) =>
+      Number(range.to.slice(8)) - Number(range.from.slice(8)) + 1;
+
+    return {
+      currentDaily: toDailySeries(rows, current.from, length(current)),
+      previousDaily: toDailySeries(rows, previous.from, length(previous)),
+    };
+  }
+
+  return { spendingSummary, dailySpending };
 }
 
 export const dashboardService = createDashboardService(defaultDb);

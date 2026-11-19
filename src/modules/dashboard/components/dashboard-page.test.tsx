@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const dash = vi.hoisted(() => ({ spendingSummaryAction: vi.fn() }));
+const dash = vi.hoisted(() => ({ spendingSummaryAction: vi.fn(), dailySpendingAction: vi.fn() }));
 const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const bud = vi.hoisted(() => ({ listBudgetsAction: vi.fn() }));
 const tx = vi.hoisted(() => ({ listTransactionsAction: vi.fn() }));
@@ -63,6 +63,7 @@ function setup(
     spending?: unknown;
     budgets?: unknown;
     transactions?: unknown[];
+    daily?: unknown;
   } = {},
 ) {
   acc.listAccountsAction.mockResolvedValue(
@@ -79,6 +80,9 @@ function setup(
         ],
       },
     ),
+  );
+  dash.dailySpendingAction.mockResolvedValue(
+    ok(overrides.daily ?? { currentDaily: [1000, 0, 2000], previousDaily: [500, 500, 500] }),
   );
   bud.listBudgetsAction.mockResolvedValue(
     ok(
@@ -123,6 +127,7 @@ describe("DashboardPage", () => {
     expect(await screen.findByRole("heading", { name: "Gastos del mes" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Presupuesto restante" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Últimos movimientos" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Evolución del gasto" })).toBeInTheDocument();
     expect(screen.getByText("−S/ 18.50")).toBeInTheDocument();
   });
 

@@ -27,6 +27,69 @@ export type SpendShare = CategorySpend & {
   isOther: boolean;
 };
 
+/**
+ * Spending per day as a list: position 0 is the first day of the range. Days
+ * without spending are 0, so the series has one value per day of the range.
+ */
+export function toDailySeries(
+  rows: { date: string; cents: number }[],
+  from: string,
+  days: number,
+): number[] {
+  const series = Array.from({ length: days }, () => 0);
+  const byDate = new Map(rows.map((r) => [r.date, r.cents]));
+  for (let i = 0; i < days; i++) {
+    series[i] = byDate.get(addDays(from, i)) ?? 0;
+  }
+  return series;
+}
+
+/** Running total: position i is what was spent from the first day up to day i + 1. */
+export function cumulative(daily: number[]): number[] {
+  let total = 0;
+  return daily.map((cents) => (total += cents));
+}
+
+export type TrendComparison = {
+  currentCents: number;
+  previousCents: number;
+  /** Current minus previous; negative when spending less than last month. */
+  diffCents: number;
+  /** Variation in whole percent; null when there is no previous spending to compare with. */
+  pct: number | null;
+  /** Average spending per day, rounded down to cents. */
+  currentAvgCents: number;
+  previousAvgCents: number;
+};
+
+/** Totals of the two periods with the difference, the variation and the daily averages. */
+export function compareTrend(
+  currentDaily: number[],
+  previousDaily: number[],
+): TrendComparison {
+  const sum = (list: number[]) => list.reduce((a, b) => a + b, 0);
+  const currentCents = sum(currentDaily);
+  const previousCents = sum(previousDaily);
+  const avg = (total: number, days: number) => (days > 0 ? Math.floor(total / days) : 0);
+
+  return {
+    currentCents,
+    previousCents,
+    diffCents: currentCents - previousCents,
+    pct: previousCents > 0 ? Math.round(((currentCents - previousCents) / previousCents) * 100) : null,
+    currentAvgCents: avg(currentCents, currentDaily.length),
+    previousAvgCents: avg(previousCents, previousDaily.length),
+  };
+}
+
+/** Rounds a positive amount up to a tidy axis maximum (1, 2, 2.5, 5 or 10 times a power of ten). */
+export function niceMax(value: number): number {
+  if (value <= 0) return 100;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  const step = [1, 2, 2.5, 5, 10].find((s) => value <= s * magnitude) ?? 10;
+  return step * magnitude;
+}
+
 const TOP = 4;
 
 /**

@@ -5,6 +5,7 @@ import { BudgetSummary } from "./budget-summary";
 import { DebtSummary } from "./debt-summary";
 import { RecentMovements } from "./recent-movements";
 import { SpendingSummary } from "./spending-summary";
+import { SpendingTrend } from "./spending-trend";
 
 /** Inicio: what you can spend, what you spent, your limits and your latest movements. */
 export function DashboardPage() {
@@ -19,6 +20,7 @@ export function DashboardPage() {
           <BudgetSummary />
         </div>
       </div>
+      <SpendingTrend />
       <RecentMovements />
     </div>
   );
