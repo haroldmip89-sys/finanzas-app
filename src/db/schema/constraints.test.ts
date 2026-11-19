@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createTestDb } from "../test-db";
-import { accounts, budgets, categories, transactions, transfers } from "./index";
+import { accounts, avoidedPurchases, budgets, categories, transactions, transfers } from "./index";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -38,7 +38,7 @@ describe("schema constraints", () => {
 
   beforeEach(async () => {
     await t.client.exec(
-      "TRUNCATE budgets, transactions, categories, accounts RESTART IDENTITY CASCADE",
+      "TRUNCATE avoided_purchases, budgets, transactions, categories, accounts RESTART IDENTITY CASCADE",
     );
   });
 
@@ -440,6 +440,72 @@ describe("schema constraints", () => {
         t.db.delete(categories).where(eq(categories.id, category.id)),
         "transactions_category_owner_kind_fk",
       );
+    });
+  });
+  describe("avoided purchases", () => {
+    const valid = (extra: Record<string, unknown> = {}) => ({
+      userId: USER_A,
+      amountCents: 8900,
+      date: "2026-11-15",
+      ...extra,
+    });
+
+    it("accepts a purchase without a category and with the defaults", async () => {
+      const [row] = await t.db.insert(avoidedPurchases).values(valid()).returning();
+
+      expect(row).toMatchObject({ categoryId: null, reason: null, note: null, status: "avoided" });
+    });
+
+    it("accepts an own expense category", async () => {
+      const category = await seedCategory();
+
+      const [row] = await t.db
+        .insert(avoidedPurchases)
+        .values(valid({ categoryId: category.id }))
+        .returning();
+
+      expect(row.categoryId).toBe(category.id);
+    });
+
+    it("rejects an income category", async () => {
+      const income = await seedCategory(USER_A, "income", "Sueldo");
+
+      await expectConstraint(
+        t.db.insert(avoidedPurchases).values(valid({ categoryId: income.id })),
+        "avoided_purchases_category_owner_kind_fk",
+      );
+    });
+
+    it("rejects a category owned by another user", async () => {
+      const other = await seedCategory(USER_B);
+
+      await expectConstraint(
+        t.db.insert(avoidedPurchases).values(valid({ categoryId: other.id })),
+        "avoided_purchases_category_owner_kind_fk",
+      );
+    });
+
+    it("rejects amount <= 0", async () => {
+      await expectConstraint(
+        t.db.insert(avoidedPurchases).values(valid({ amountCents: 0 })),
+        "avoided_purchases_amount_positive",
+      );
+    });
+
+    it("rejects a note longer than 120 characters", async () => {
+      await expectConstraint(
+        t.db.insert(avoidedPurchases).values(valid({ note: "x".repeat(121) })),
+        "avoided_purchases_note_length",
+      );
+    });
+
+    it("rejects deleting a category that has avoided purchases", async () => {
+      const category = await seedCategory();
+      await t.db.insert(avoidedPurchases).values(valid({ categoryId: category.id }));
+
+      await expect(
+        t.db.delete(categories).where(eq(categories.id, category.id)),
+      ).rejects.toBeDefined();
     });
   });
 });

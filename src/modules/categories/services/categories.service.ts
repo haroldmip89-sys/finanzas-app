@@ -167,7 +167,7 @@ export function createCategoriesService(db: Database) {
       if (isInUseError(error)) {
         throw new AppError(
           "IN_USE",
-          "No se puede eliminar: tiene transacciones o presupuestos. Archívala en su lugar.",
+          "No se puede eliminar: tiene transacciones, presupuestos o compras evitadas. Archívala en su lugar.",
         );
       }
       throw error;

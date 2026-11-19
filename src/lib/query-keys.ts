@@ -3,3 +3,6 @@
 
 /** Budgets depend on spending, so saving a transaction must refresh them. */
 export const budgetsKey = ["budgets"] as const;
+
+/** Avoided purchases are not financial: they only refresh themselves. */
+export const avoidedKey = ["avoided-purchases"] as const;

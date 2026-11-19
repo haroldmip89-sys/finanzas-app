@@ -8,8 +8,10 @@ const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const bud = vi.hoisted(() => ({ listBudgetsAction: vi.fn() }));
 const tx = vi.hoisted(() => ({ listTransactionsAction: vi.fn() }));
 const quick = vi.hoisted(() => ({ open: vi.fn() }));
+const avoided = vi.hoisted(() => ({ listAvoidedAction: vi.fn() }));
 
 vi.mock("../actions/dashboard.actions", () => dash);
+vi.mock("@/modules/avoided-purchases/actions/avoided.actions", () => avoided);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/budgets/actions/budgets.actions", () => bud);
 vi.mock("@/modules/transactions/actions/transactions.actions", () => tx);
@@ -81,6 +83,15 @@ function setup(
       },
     ),
   );
+  avoided.listAvoidedAction.mockResolvedValue(
+    ok({
+      month: "2026-11",
+      items: [],
+      totals: { avoidedCount: 0, avoidedCents: 0, postponedCount: 0, postponedCents: 0 },
+      byCategory: [],
+      previous: { count: 0, cents: 0 },
+    }),
+  );
   dash.dailySpendingAction.mockResolvedValue(
     ok(overrides.daily ?? { currentDaily: [1000, 0, 2000], previousDaily: [500, 500, 500] }),
   );
@@ -128,6 +139,7 @@ describe("DashboardPage", () => {
     expect(await screen.findByRole("heading", { name: "Presupuesto restante" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Últimos movimientos" })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Evolución del gasto" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Compras evitadas" })).toBeInTheDocument();
     expect(screen.getByText("−S/ 18.50")).toBeInTheDocument();
   });
 
