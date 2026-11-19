@@ -1,10 +1,11 @@
 import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 /**
- * Drizzle client for Neon using the serverless Pool driver.
- * In Vercel production, DATABASE_URL should use Neon's pooled endpoint
- * (hostname containing "-pooler") to reduce connection overhead per instance.
- * Pool creation is lazy and cached per instance.
+ * Drizzle client for Neon using @neondatabase/serverless Pool.
+ * In Vercel production, set DATABASE_URL to Neon’s pooled connection endpoint
+ * (hostname includes "-pooler") to reduce connection overhead during serverless
+ * cold starts. This code intentionally does not rewrite/guess the URL because
+ * local, test, and migration environments may use different connection types.
  *
  * Server-only, Node.js runtime. No schema is passed: modules use query
  * builder with tables from src/db/schema.
