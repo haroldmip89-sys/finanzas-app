@@ -1,6 +1,6 @@
 # Compras impulsivas evitadas
 
-Estado: hecha (falta aplicar la migración 0004 a Neon y la prueba en vivo)
+Estado: hecha (falta tu revisión con sesión)
 
 ## Objetivo
 
@@ -93,7 +93,7 @@ Referencias: `docs/BRIEF.md §5.2, §9`, diseño "Inicio" (tarjeta "compras evit
 
 ## Notas de implementación
 
-- Tabla `avoided_purchases` y migración `drizzle/0004_cultured_whistler.sql` (enums `avoided_reason` y `avoided_status`). **Pendiente de aplicar a Neon**; hasta entonces la página y la tarjeta de Inicio fallan al cargar. Los tests de migraciones y restricciones ya cubren la tabla.
+- Tabla `avoided_purchases` y migración `drizzle/0004_cultured_whistler.sql` (enums `avoided_reason` y `avoided_status`). Aplicada a Neon; prueba en vivo con usuario temporal (insertar, rechazar importe 0, borrar): correcta y sin datos sobrantes. Los tests de migraciones y restricciones ya cubren la tabla.
 - Servicio puro de dinero: no importa ni toca `transactions`, saldos, presupuestos ni dinero disponible (hay un test que lo comprueba).
 - La fecha futura se rechaza en el servicio con la fecha de Lima. Una categoría archivada se conserva solo si el registro ya la usaba.
 - Los mensajes de la nota ("Mes anterior a la misma altura", "no suman arriba") y el texto "Es lo que habrías gastado, no dinero ahorrado." aparecen en la tarjeta, la página y el formulario.

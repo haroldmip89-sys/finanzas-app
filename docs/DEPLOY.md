@@ -24,7 +24,10 @@ Notas:
 
 ## 2. Previews desactivados
 
-Solo `main` se despliega. En Vercel: Settings → Git → **Ignored Build Step** → "Run my Bash script" con:
+Solo `main` se despliega. En Vercel el ajuste **Ignored Build Step** no está en la pestaña Git: está en **Settings → Build and Deployment** (menú de la izquierda), más abajo en esa misma página. Opciones:
+
+- Si ves la opción **"Only build production"**, elígela y listo: es justo lo que necesitamos.
+- Si no, elige **"Run my Bash script"** y pega:
 
 ```bash
 if [ "$VERCEL_GIT_COMMIT_REF" = "main" ]; then exit 1; else exit 0; fi
