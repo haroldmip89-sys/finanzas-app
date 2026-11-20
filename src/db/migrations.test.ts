@@ -28,6 +28,7 @@ describe("migrations", () => {
       "categories",
       "transactions",
       "transfers",
+      "user_settings",
     ]);
   });
 

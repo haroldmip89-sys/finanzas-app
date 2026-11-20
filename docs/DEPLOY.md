@@ -88,6 +88,7 @@ Si hace falta quitar o renombrar algo, se hace en dos despliegues: primero el c�
 
 ## 10. Pendiente
 
+- **Nombre "Yupi" en el inicio de sesión con Google** (estético). Hoy Google muestra "Estás volviendo a acceder a Clerk" porque la instancia de desarrollo usa las credenciales de Google compartidas de Clerk. Para que diga "Yupi": crear un proyecto en Google Cloud Console, configurar la pantalla de consentimiento OAuth con el nombre "Yupi" y un correo de soporte, crear un ID de cliente OAuth (aplicación web), activar "Use custom credentials" en Clerk (User & authentication → Social connections → Google), pegar la URL de redirección de Clerk en Google y copiar el Client ID y el Client Secret a Clerk. Sin cambios de código. Mientras la pantalla de consentimiento esté en "Testing" solo entran los correos de prueba: pasarla a "En producción" para abrirla a cualquier cuenta. El Client Secret va solo en el panel de Clerk, nunca en el repositorio.
 - CSP (Content-Security-Policy): requiere la política específica de Clerk; se hará con dominio propio.
 - Exportación o borrado de datos de un usuario.
 - Retención de datos antiguos: no se borra nada automáticamente.

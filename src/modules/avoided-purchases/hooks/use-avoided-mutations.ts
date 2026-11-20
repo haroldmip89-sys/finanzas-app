@@ -7,6 +7,7 @@ import { unwrapResult } from "@/lib/action-result";
 import {
   createAvoidedAction,
   deleteAvoidedAction,
+  dismissAvoidedReminderAction,
   setAvoidedStatusAction,
   updateAvoidedAction,
 } from "../actions/avoided.actions";
@@ -35,6 +36,14 @@ export function useSetAvoidedStatus() {
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: AvoidedStatus }) =>
       unwrapResult(await setAvoidedStatusAction(id, status)),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDismissReminder() {
+  const invalidate = useInvalidateAvoided();
+  return useMutation({
+    mutationFn: async (id: string) => unwrapResult(await dismissAvoidedReminderAction(id)),
     onSuccess: invalidate,
   });
 }

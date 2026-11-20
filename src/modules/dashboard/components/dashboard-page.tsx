@@ -1,3 +1,4 @@
+import { ReminderCard } from "@/modules/mindful-purchase/components/reminder-card";
 import { AvoidedSummaryCard } from "@/modules/avoided-purchases/components/avoided-summary-card";
 import { AvailableMoneyCard } from "@/modules/available-money/components/available-money-card";
 import { QuickActions } from "@/modules/quick-add/components/quick-actions";
@@ -13,6 +14,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-4">
       <AvailableMoneyCard />
+      <ReminderCard />
       <QuickActions />
       <div className="grid gap-4 lg:grid-cols-2">
         <SpendingSummary />

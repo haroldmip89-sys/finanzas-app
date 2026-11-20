@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 
 import { db as defaultDb } from "@/db/client";
 import { avoidedPurchases, categories } from "@/db/schema";
@@ -21,6 +21,12 @@ import type {
 } from "../types/avoided.types";
 
 const NOT_FOUND_MESSAGE = "La compra evitada no existe.";
+const DUE_LIMIT = 3;
+
+/** The moment to ask again: only for a postponed purchase with a chosen pause. */
+function reminderAt(status: AvoidedStatus, minutes: number | null, now: Date): Date | null {
+  return status === "postponed" && minutes ? new Date(now.getTime() + minutes * 60_000) : null;
+}
 
 function validationError(field: string, message: string): AppError {
   return new AppError("VALIDATION", "Revisa los datos ingresados.", { [field]: message });
@@ -80,6 +86,7 @@ export function createAvoidedPurchasesService(db: Database) {
         reason: avoidedPurchases.reason,
         note: avoidedPurchases.note,
         status: avoidedPurchases.status,
+        remindAt: avoidedPurchases.remindAt,
       })
       .from(avoidedPurchases)
       .leftJoin(categories, eq(categories.id, avoidedPurchases.categoryId))
@@ -126,9 +133,10 @@ export function createAvoidedPurchasesService(db: Database) {
     assertNotFuture(data.date, now);
     await assertCategory(userId, data.categoryId);
 
+    const { remindInMinutes, ...fields } = data;
     const [row] = await db
       .insert(avoidedPurchases)
-      .values({ userId, ...data })
+      .values({ userId, ...fields, remindAt: reminderAt(data.status, remindInMinutes, now) })
       .returning();
     return row;
   }
@@ -141,7 +149,7 @@ export function createAvoidedPurchasesService(db: Database) {
   ): Promise<AvoidedPurchase> {
     const data = avoidedInputSchema.parse(input);
     const [current] = await db
-      .select({ categoryId: avoidedPurchases.categoryId })
+      .select({ categoryId: avoidedPurchases.categoryId, remindAt: avoidedPurchases.remindAt })
       .from(avoidedPurchases)
       .where(owned(userId, id));
     if (!current) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
@@ -149,9 +157,17 @@ export function createAvoidedPurchasesService(db: Database) {
     assertNotFuture(data.date, now);
     await assertCategory(userId, data.categoryId, current.categoryId);
 
+    // A new pause restarts the reminder; without one a postponed purchase keeps its current reminder.
+    const { remindInMinutes, ...fields } = data;
+    const remindAt =
+      data.status !== "postponed"
+        ? null
+        : remindInMinutes
+          ? reminderAt(data.status, remindInMinutes, now)
+          : current.remindAt;
     const [row] = await db
       .update(avoidedPurchases)
-      .set(data)
+      .set({ ...fields, remindAt })
       .where(owned(userId, id))
       .returning();
     if (!row) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
@@ -165,7 +181,11 @@ export function createAvoidedPurchasesService(db: Database) {
   ): Promise<AvoidedPurchase> {
     const [row] = await db
       .update(avoidedPurchases)
-      .set({ status: avoidedStatusSchema.parse(status) })
+      .set({
+        status: avoidedStatusSchema.parse(status),
+        // A reminder only makes sense while the purchase is postponed.
+        ...(status === "avoided" ? { remindAt: null } : {}),
+      })
       .where(owned(userId, id))
       .returning();
     if (!row) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
@@ -180,7 +200,46 @@ export function createAvoidedPurchasesService(db: Database) {
     if (rows.length === 0) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
   }
 
-  return { list, create, update, setStatus, remove };
+  /** Postponed purchases whose pause is over, oldest first (at most a few). */
+  async function listDue(userId: string, now: Date = new Date()): Promise<AvoidedItem[]> {
+    return db
+      .select({
+        id: avoidedPurchases.id,
+        amountCents: avoidedPurchases.amountCents,
+        date: avoidedPurchases.date,
+        categoryId: avoidedPurchases.categoryId,
+        categoryName: categories.name,
+        categoryIcon: categories.icon,
+        reason: avoidedPurchases.reason,
+        note: avoidedPurchases.note,
+        status: avoidedPurchases.status,
+        remindAt: avoidedPurchases.remindAt,
+      })
+      .from(avoidedPurchases)
+      .leftJoin(categories, eq(categories.id, avoidedPurchases.categoryId))
+      .where(
+        and(
+          eq(avoidedPurchases.userId, userId),
+          eq(avoidedPurchases.status, "postponed"),
+          lte(avoidedPurchases.remindAt, now),
+        ),
+      )
+      .orderBy(asc(avoidedPurchases.remindAt))
+      .limit(DUE_LIMIT);
+  }
+
+  /** "Not now": stops asking, the purchase stays postponed in the history. */
+  async function dismissReminder(userId: string, id: string): Promise<AvoidedPurchase> {
+    const [row] = await db
+      .update(avoidedPurchases)
+      .set({ remindAt: null })
+      .where(and(owned(userId, id), eq(avoidedPurchases.status, "postponed")))
+      .returning();
+    if (!row) throw new AppError("NOT_FOUND", NOT_FOUND_MESSAGE);
+    return row;
+  }
+
+  return { list, create, update, setStatus, remove, listDue, dismissReminder };
 }
 
 export const avoidedPurchasesService = createAvoidedPurchasesService(defaultDb);

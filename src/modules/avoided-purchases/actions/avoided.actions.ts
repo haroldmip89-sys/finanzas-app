@@ -11,7 +11,7 @@ import {
   avoidedStatusSchema,
 } from "../schemas/avoided.schema";
 import { avoidedPurchasesService } from "../services/avoided-purchases.service";
-import type { AvoidedOverview, AvoidedPurchase } from "../types/avoided.types";
+import type { AvoidedItem, AvoidedOverview, AvoidedPurchase } from "../types/avoided.types";
 
 export async function listAvoidedAction(month: unknown): Promise<ActionResult<AvoidedOverview>> {
   return runAction(async () => {
@@ -60,5 +60,21 @@ export async function deleteAvoidedAction(id: unknown): Promise<ActionResult<nul
     const userId = await requireUserId();
     await avoidedPurchasesService.remove(userId, avoidedIdSchema.parse(id));
     return null;
+  });
+}
+
+export async function listDueRemindersAction(): Promise<ActionResult<AvoidedItem[]>> {
+  return runAction(async () => {
+    const userId = await requireUserId();
+    return avoidedPurchasesService.listDue(userId);
+  });
+}
+
+export async function dismissAvoidedReminderAction(
+  id: unknown,
+): Promise<ActionResult<AvoidedPurchase>> {
+  return runAction(async () => {
+    const userId = await requireUserId();
+    return avoidedPurchasesService.dismissReminder(userId, avoidedIdSchema.parse(id));
   });
 }

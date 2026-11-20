@@ -25,6 +25,12 @@ const note = z
 
 const status = z.enum(STATUSES, { error: "Estado inválido" });
 
+/** Pauses offered by "Pensarlo": 10 minutes or 24 hours. */
+export const PAUSE_MINUTES = [10, 1440] as const;
+export const pauseMinutesSchema = z.union([z.literal(10), z.literal(1440)], {
+  error: "Pausa inválida",
+});
+
 /** Server contract: only the amount is required; the rest is optional. */
 export const avoidedInputSchema = z.object({
   amountCents,
@@ -33,6 +39,8 @@ export const avoidedInputSchema = z.object({
   reason: z.enum(REASONS, { error: "Motivo inválido" }).nullish().transform((v) => v ?? null),
   note,
   status: status.default("avoided"),
+  /** Only for postponed purchases: ask again after this many minutes. */
+  remindInMinutes: pauseMinutesSchema.nullish().transform((v) => v ?? null),
 });
 
 export const avoidedIdSchema = z.uuid("Identificador inválido");

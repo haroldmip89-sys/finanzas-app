@@ -2,7 +2,15 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createTestDb } from "../test-db";
-import { accounts, avoidedPurchases, budgets, categories, transactions, transfers } from "./index";
+import {
+  accounts,
+  avoidedPurchases,
+  budgets,
+  categories,
+  transactions,
+  transfers,
+  userSettings,
+} from "./index";
 
 type TestDb = Awaited<ReturnType<typeof createTestDb>>;
 
@@ -38,7 +46,7 @@ describe("schema constraints", () => {
 
   beforeEach(async () => {
     await t.client.exec(
-      "TRUNCATE avoided_purchases, budgets, transactions, categories, accounts RESTART IDENTITY CASCADE",
+      "TRUNCATE user_settings, avoided_purchases, budgets, transactions, categories, accounts RESTART IDENTITY CASCADE",
     );
   });
 
@@ -506,6 +514,65 @@ describe("schema constraints", () => {
       await expect(
         t.db.delete(categories).where(eq(categories.id, category.id)),
       ).rejects.toBeDefined();
+    });
+  });
+  describe("avoided purchases reminder", () => {
+    const base = { userId: USER_A, amountCents: 8990, date: "2026-11-15" };
+
+    it("accepts a reminder on a postponed purchase", async () => {
+      const [row] = await t.db
+        .insert(avoidedPurchases)
+        .values({ ...base, status: "postponed", remindAt: new Date("2026-11-16T12:00:00Z") })
+        .returning();
+
+      expect(row.remindAt).toBeInstanceOf(Date);
+    });
+
+    it("rejects a reminder on an avoided purchase", async () => {
+      await expectConstraint(
+        t.db
+          .insert(avoidedPurchases)
+          .values({ ...base, status: "avoided", remindAt: new Date("2026-11-16T12:00:00Z") }),
+        "avoided_purchases_remind_postponed",
+      );
+    });
+  });
+
+  describe("user settings", () => {
+    it("has the defaults: enabled, S/ 100 and 24 hours", async () => {
+      const [row] = await t.db.insert(userSettings).values({ userId: USER_A }).returning();
+
+      expect(row).toMatchObject({
+        mindfulEnabled: true,
+        mindfulThresholdCents: 10000,
+        mindfulPauseMinutes: 1440,
+      });
+    });
+
+    it("is one row per user", async () => {
+      await t.db.insert(userSettings).values({ userId: USER_A });
+
+      await expect(t.db.insert(userSettings).values({ userId: USER_A })).rejects.toBeDefined();
+    });
+
+    it("rejects a threshold <= 0", async () => {
+      await expectConstraint(
+        t.db.insert(userSettings).values({ userId: USER_A, mindfulThresholdCents: 0 }),
+        "user_settings_threshold_positive",
+      );
+    });
+
+    it.each([0, 5, 60, 1000])("rejects a pause of %d minutes", async (minutes) => {
+      await expectConstraint(
+        t.db.insert(userSettings).values({ userId: USER_A, mindfulPauseMinutes: minutes }),
+        "user_settings_pause_allowed",
+      );
+    });
+
+    it.each([10, 1440])("accepts a pause of %d minutes", async (minutes) => {
+      await expect(
+        t.db.insert(userSettings).values({ userId: USER_A, mindfulPauseMinutes: minutes }),
+      ).resolves.toBeDefined();
     });
   });
 });

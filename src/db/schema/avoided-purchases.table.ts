@@ -34,6 +34,8 @@ export const avoidedPurchases = pgTable(
     reason: avoidedReasonEnum("reason"),
     note: text("note"),
     status: avoidedStatusEnum("status").notNull().default("avoided"),
+    // When a postponed purchase should be asked about again (spec 010c). Only for postponed ones.
+    remindAt: timestamp("remind_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -54,6 +56,10 @@ export const avoidedPurchases = pgTable(
     check(
       "avoided_purchases_note_length",
       sql`${t.note} is null or char_length(${t.note}) <= 120`,
+    ),
+    check(
+      "avoided_purchases_remind_postponed",
+      sql`${t.remindAt} is null or ${t.status} = 'postponed'`,
     ),
     index("avoided_purchases_user_date_idx").on(t.userId, t.date.desc()),
   ],

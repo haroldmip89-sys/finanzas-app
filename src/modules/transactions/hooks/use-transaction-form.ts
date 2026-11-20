@@ -8,6 +8,7 @@ import { todayInLima } from "@/lib/dates";
 import { centsToPen, formatPen, penToCents } from "@/lib/money";
 import { useLastAccount } from "@/hooks/use-last-account";
 import { useZodForm } from "@/hooks/use-zod-form";
+import type { ExpensePrefill } from "@/modules/quick-add/hooks/use-quick-add";
 import { useAccounts } from "@/modules/accounts/hooks/use-accounts";
 import { useCategories } from "@/modules/categories/hooks/use-categories";
 
@@ -28,13 +29,14 @@ export type SelectOption = { id: string; name: string; icon?: string | null };
 function defaultsFor(
   transaction: TransactionListItem | undefined,
   defaultType: TransactionType,
+  prefill?: ExpensePrefill,
 ): TransactionFormValues {
   if (!transaction) {
     return {
       type: defaultType,
       accountId: "",
-      categoryId: "",
-      amount: "",
+      categoryId: prefill?.categoryId ?? "",
+      amount: prefill ? centsToPen(prefill.amountCents) : "",
       date: todayInLima(),
       note: "",
     };
@@ -53,22 +55,26 @@ type Options = {
   transaction?: TransactionListItem;
   /** Type preselected when creating. */
   defaultType?: TransactionType;
+  /** Amount and category filled in by "Evaluar una compra". */
+  prefill?: ExpensePrefill;
   onSuccess: () => void;
 };
 
 export function useTransactionForm({
   transaction,
   defaultType = "expense",
+  prefill,
   onSuccess,
 }: Options) {
   const save = useSaveTransaction();
   const accountsQuery = useAccounts(false);
   const categoriesQuery = useCategories(false);
   const { lastAccountId, saveLastAccount } = useLastAccount();
-  const [showAllCategories, setShowAllCategories] = useState(false);
+  // A prefilled category may not be among the frequent ones: show the full select then.
+  const [showAllCategories, setShowAllCategories] = useState(Boolean(prefill?.categoryId));
   const { form, applyServerError, submitError } = useZodForm(
     transactionFormSchema,
-    defaultsFor(transaction, defaultType),
+    defaultsFor(transaction, defaultType, prefill),
   );
   const type = form.watch("type");
   const frequentQuery = useFrequentCategories(type);

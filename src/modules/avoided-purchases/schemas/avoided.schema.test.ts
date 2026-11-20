@@ -21,7 +21,14 @@ describe("avoidedInputSchema", () => {
       reason: null,
       note: null,
       status: "avoided",
+      remindInMinutes: null,
     });
+  });
+
+  it("accepts a pause of 10 minutes or 24 hours and rejects any other", () => {
+    expect(avoidedInputSchema.parse({ ...base, status: "postponed", remindInMinutes: 10 }).remindInMinutes).toBe(10);
+    expect(avoidedInputSchema.parse({ ...base, status: "postponed", remindInMinutes: 1440 }).remindInMinutes).toBe(1440);
+    expect(avoidedInputSchema.safeParse({ ...base, remindInMinutes: 60 }).success).toBe(false);
   });
 
   it("accepts every optional field", () => {

@@ -1,4 +1,4 @@
-import { ShieldCheck, Tags, type LucideIcon } from "lucide-react";
+import { Lightbulb, ShieldCheck, Tags, type LucideIcon } from "lucide-react";
 
 export type SettingsItem = {
   href: string;
@@ -20,5 +20,11 @@ export const settingsItems: SettingsItem[] = [
     title: "Compras evitadas",
     description: "Lo que decidiste no gastar.",
     icon: ShieldCheck,
+  },
+  {
+    href: "/mindful",
+    title: "Compra consciente",
+    description: "Una pausa opcional antes de comprar.",
+    icon: Lightbulb,
   },
 ];

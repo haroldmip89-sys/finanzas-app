@@ -8,10 +8,12 @@ const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const bud = vi.hoisted(() => ({ listBudgetsAction: vi.fn() }));
 const tx = vi.hoisted(() => ({ listTransactionsAction: vi.fn() }));
 const quick = vi.hoisted(() => ({ open: vi.fn() }));
-const avoided = vi.hoisted(() => ({ listAvoidedAction: vi.fn() }));
+const avoided = vi.hoisted(() => ({ listAvoidedAction: vi.fn(), listDueRemindersAction: vi.fn() }));
+const mind = vi.hoisted(() => ({ getMindfulSettingsAction: vi.fn(), saveMindfulSettingsAction: vi.fn() }));
 
 vi.mock("../actions/dashboard.actions", () => dash);
 vi.mock("@/modules/avoided-purchases/actions/avoided.actions", () => avoided);
+vi.mock("@/modules/mindful-purchase/actions/settings.actions", () => mind);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/budgets/actions/budgets.actions", () => bud);
 vi.mock("@/modules/transactions/actions/transactions.actions", () => tx);
@@ -83,6 +85,10 @@ function setup(
       },
     ),
   );
+  mind.getMindfulSettingsAction.mockResolvedValue(
+    ok({ enabled: true, thresholdCents: 10000, pauseMinutes: 1440 }),
+  );
+  avoided.listDueRemindersAction.mockResolvedValue(ok([]));
   avoided.listAvoidedAction.mockResolvedValue(
     ok({
       month: "2026-11",
@@ -184,6 +190,30 @@ describe("DashboardPage", () => {
     await screen.findByRole("heading", { name: "Gastos del mes" });
 
     expect(screen.queryByRole("heading", { name: "Deuda de tarjetas" })).not.toBeInTheDocument();
+  });
+
+  it("asks about a postponed purchase whose pause is over", async () => {
+    setup();
+    avoided.listDueRemindersAction.mockResolvedValue(
+      ok([
+        {
+          id: "99999999-9999-4999-8999-999999999999",
+          amountCents: 8990,
+          date: "2026-11-14",
+          categoryId: null,
+          categoryName: null,
+          categoryIcon: null,
+          reason: null,
+          note: "Zapatillas",
+          status: "postponed",
+          remindAt: new Date("2026-11-15T10:00:00Z"),
+        },
+      ]),
+    );
+    renderPage();
+
+    expect(await screen.findByText("Lo que estabas pensando comprar")).toBeInTheDocument();
+    expect(screen.getByText(/Pensabas comprar/)).toHaveTextContent("Zapatillas");
   });
 
   it("shows the card debt with how many cards owe", async () => {

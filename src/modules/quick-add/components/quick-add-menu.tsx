@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftRight, CircleMinus, CirclePlus } from "lucide-react";
+import { ArrowLeftRight, CircleMinus, CirclePlus, Lightbulb } from "lucide-react";
 import type { ReactElement } from "react";
 
 import {
@@ -9,6 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { useMindfulSettings } from "@/modules/mindful-purchase/hooks/use-mindful-settings";
 
 import { useQuickAdd } from "../hooks/use-quick-add";
 
@@ -20,6 +22,7 @@ type QuickAddMenuProps = {
 
 export function QuickAddMenu({ trigger, align = "end" }: QuickAddMenuProps) {
   const { open } = useQuickAdd();
+  const mindful = useMindfulSettings();
 
   return (
     <DropdownMenu>
@@ -34,6 +37,11 @@ export function QuickAddMenu({ trigger, align = "end" }: QuickAddMenuProps) {
         <DropdownMenuItem className="min-h-11 md:min-h-10" onClick={() => open("transfer")}>
           <ArrowLeftRight /> Transferir
         </DropdownMenuItem>
+        {mindful.enabled && (
+          <DropdownMenuItem className="min-h-11 md:min-h-10" onClick={() => open("evaluate")}>
+            <Lightbulb /> Evaluar una compra
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

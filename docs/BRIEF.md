@@ -185,7 +185,7 @@ La numeración conserva los identificadores del v0.2 y añade letras para lo nue
 | — | 017 | Dashboard: presupuestos en el dinero disponible y evolución del gasto (spec 017-dashboard-insights) | P1 | Spec escrita, por aprobar |
 | 8 | 010 | Endurecimiento y despliegue en Vercel + Neon | P0 | Hecha (falta configurar Vercel y la prueba de humo) |
 | 9 | 010a | Compras impulsivas evitadas | P1 | Hecha |
-| 10 | 010c | Compra consciente | P1 | Pendiente (nuevo) |
+| 10 | 010c | Compra consciente | P1 | Hecha (falta aplicar la migración 0005) |
 | 11 | 010b | Resumen financiero semanal | P1 | Pendiente (nuevo) |
 | 12 | 011 | PWA | — | Pospuesta |
 

@@ -23,6 +23,15 @@ const tr = vi.hoisted(() => ({
 }));
 const acc = vi.hoisted(() => ({ listAccountsAction: vi.fn() }));
 const cat = vi.hoisted(() => ({ listCategoriesAction: vi.fn() }));
+const mind = vi.hoisted(() => ({ getMindfulSettingsAction: vi.fn(), saveMindfulSettingsAction: vi.fn() }));
+const bud = vi.hoisted(() => ({ listBudgetsAction: vi.fn() }));
+const avd = vi.hoisted(() => ({
+  listAvoidedAction: vi.fn(),
+  createAvoidedAction: vi.fn(),
+  updateAvoidedAction: vi.fn(),
+  setAvoidedStatusAction: vi.fn(),
+  deleteAvoidedAction: vi.fn(),
+}));
 
 vi.mock("@/modules/transactions/actions/transactions.actions", () => tx);
 vi.mock("@/modules/calibration/actions/calibration.actions", () => ({
@@ -31,6 +40,9 @@ vi.mock("@/modules/calibration/actions/calibration.actions", () => ({
 vi.mock("@/modules/transfers/actions/transfers.actions", () => tr);
 vi.mock("@/modules/accounts/actions/accounts.actions", () => acc);
 vi.mock("@/modules/categories/actions/categories.actions", () => cat);
+vi.mock("@/modules/mindful-purchase/actions/settings.actions", () => mind);
+vi.mock("@/modules/budgets/actions/budgets.actions", () => bud);
+vi.mock("@/modules/avoided-purchases/actions/avoided.actions", () => avd);
 
 import { useQuickAdd } from "../hooks/use-quick-add";
 import { QuickActions } from "./quick-actions";
@@ -55,6 +67,19 @@ function renderWithProviders(ui: ReactNode) {
   );
 }
 
+function BuyButton() {
+  const { open } = useQuickAdd();
+  return (
+    <button
+      onClick={() =>
+        open("expense", { prefill: { amountCents: 4550, categoryId: "11111111-1111-4111-8111-111111111111" } })
+      }
+    >
+      buy
+    </button>
+  );
+}
+
 function PayButton({ accountId }: { accountId: string }) {
   const { open } = useQuickAdd();
   return <button onClick={() => open("pay-card", { accountId })}>pay</button>;
@@ -66,6 +91,20 @@ describe("quick add", () => {
     pathname.value = "/transactions";
     acc.listAccountsAction.mockResolvedValue({ ok: true, data: accounts });
     cat.listCategoriesAction.mockResolvedValue({ ok: true, data: categories });
+    mind.getMindfulSettingsAction.mockResolvedValue({
+      ok: true,
+      data: { enabled: true, thresholdCents: 10000, pauseMinutes: 1440 },
+    });
+    bud.listBudgetsAction.mockResolvedValue({
+      ok: true,
+      data: {
+        month: "2026-11",
+        items: [],
+        unbudgeted: [],
+        totals: { budgetedCents: 0, spentCents: 0, remainingCents: 0 },
+        previousMonthHasBudgets: false,
+      },
+    });
     tx.listFrequentCategoriesAction.mockImplementation(async (type: string) => ({
       ok: true,
       data: categories
@@ -158,6 +197,37 @@ describe("quick add", () => {
     });
   });
 
+  describe("expense prefill", () => {
+    it("opens the expense form with the amount and category from 'Evaluar una compra'", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<BuyButton />);
+
+      await user.click(screen.getByRole("button", { name: "buy" }));
+
+      expect(await screen.findByRole("heading", { name: "Nueva transacción" })).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByLabelText("Monto (S/)")).toHaveValue("45.50"));
+      await waitFor(() => expect(screen.getByRole("combobox", { name: /Categoría/ })).toHaveTextContent("Comida"));
+    });
+
+    it("shows the soft hint for a large new expense and not for a small one", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<QuickAddFab />);
+
+      await user.click(screen.getByRole("button", { name: "Nuevo registro" }));
+      await user.click(await screen.findByRole("menuitem", { name: /Nuevo gasto/ }));
+      const amount = await screen.findByLabelText("Monto (S/)");
+
+      await user.type(amount, "50");
+      expect(screen.queryByText(/Es una compra grande para ti/)).not.toBeInTheDocument();
+
+      await user.clear(amount);
+      await user.type(amount, "150");
+      expect(await screen.findByText(/Es una compra grande para ti/)).toBeInTheDocument();
+      // The hint never replaces or disables saving.
+      expect(screen.getByRole("button", { name: "Guardar" })).toBeEnabled();
+    });
+  });
+
   describe("QuickAddFab", () => {
     it("is shown on the movement screens", () => {
       renderWithProviders(<QuickAddFab />);
@@ -170,6 +240,31 @@ describe("quick add", () => {
       renderWithProviders(<QuickAddFab />);
 
       expect(screen.getByRole("button", { name: "Nuevo registro" })).toBeInTheDocument();
+    });
+
+    it("offers 'Evaluar una compra' when the mindful purchase is on, and opens its sheet", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<QuickAddFab />);
+
+      await user.click(screen.getByRole("button", { name: "Nuevo registro" }));
+      await user.click(await screen.findByRole("menuitem", { name: /Evaluar una compra/ }));
+
+      expect(await screen.findByRole("heading", { name: "Evaluar una compra" })).toBeInTheDocument();
+    });
+
+    it("does not offer 'Evaluar una compra' when the mindful purchase is off", async () => {
+      mind.getMindfulSettingsAction.mockResolvedValue({
+        ok: true,
+        data: { enabled: false, thresholdCents: 10000, pauseMinutes: 1440 },
+      });
+      const user = userEvent.setup();
+      renderWithProviders(<QuickAddFab />);
+      await waitFor(() => expect(mind.getMindfulSettingsAction).toHaveBeenCalled());
+
+      await user.click(screen.getByRole("button", { name: "Nuevo registro" }));
+
+      expect(await screen.findByRole("menuitem", { name: /Nuevo gasto/ })).toBeInTheDocument();
+      expect(screen.queryByRole("menuitem", { name: /Evaluar una compra/ })).not.toBeInTheDocument();
     });
 
     it("opens a menu with the three options and then the chosen form", async () => {

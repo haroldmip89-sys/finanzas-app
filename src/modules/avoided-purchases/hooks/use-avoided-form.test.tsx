@@ -41,6 +41,7 @@ const existing: AvoidedItem = {
   reason: "can_wait",
   note: "Zapatillas",
   status: "postponed",
+  remindAt: null,
 };
 
 describe("useAvoidedForm", () => {

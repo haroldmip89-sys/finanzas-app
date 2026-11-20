@@ -15,6 +15,8 @@ export type AvoidedItem = {
   reason: AvoidedReason | null;
   note: string | null;
   status: AvoidedStatus;
+  /** When a postponed purchase should be asked about again; null otherwise. */
+  remindAt: Date | null;
 };
 
 export type AvoidedTotals = {

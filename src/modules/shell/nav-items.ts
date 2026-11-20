@@ -28,7 +28,7 @@ export const settingsItem: NavItem = {
   href: "/settings",
   label: "Ajustes",
   icon: Settings,
-  matches: ["/categories", "/avoided"],
+  matches: ["/categories", "/avoided", "/mindful"],
 };
 
 // Barra inferior (móvil): Presupuestos se alcanza desde Inicio y el menú lateral.

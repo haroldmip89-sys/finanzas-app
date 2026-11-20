@@ -310,4 +310,106 @@ describe("avoided purchases service", () => {
       expect(overview.items).toHaveLength(1);
     });
   });
+  describe("reminders", () => {
+    const MINUTE = 60_000;
+
+    it("sets the reminder of a postponed purchase from the chosen pause", async () => {
+      const short = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+      const long = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 1440 }), NOW);
+
+      expect(short.remindAt?.getTime()).toBe(NOW.getTime() + 10 * MINUTE);
+      expect(long.remindAt?.getTime()).toBe(NOW.getTime() + 1440 * MINUTE);
+    });
+
+    it("has no reminder without a pause, or on an avoided purchase", async () => {
+      const noPause = await service.create(USER_A, input({ status: "postponed" }), NOW);
+      const avoided = await service.create(USER_A, input({ status: "avoided", remindInMinutes: 10 }), NOW);
+
+      expect(noPause.remindAt).toBeNull();
+      expect(avoided.remindAt).toBeNull();
+    });
+
+    it("drops the reminder when a postponed purchase becomes avoided", async () => {
+      const row = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+
+      const updated = await service.setStatus(USER_A, row.id, "avoided");
+
+      expect(updated.remindAt).toBeNull();
+    });
+
+    it("keeps the reminder on an edit without a new pause, and restarts it with one", async () => {
+      const row = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+      const later = new Date(NOW.getTime() + 5 * MINUTE);
+
+      const kept = await service.update(USER_A, row.id, input({ status: "postponed", note: "otra" }), later);
+      const restarted = await service.update(
+        USER_A,
+        row.id,
+        input({ status: "postponed", remindInMinutes: 1440 }),
+        later,
+      );
+
+      expect(kept.remindAt?.getTime()).toBe(row.remindAt?.getTime());
+      expect(restarted.remindAt?.getTime()).toBe(later.getTime() + 1440 * MINUTE);
+    });
+
+    it("drops the reminder when an edit turns it into an avoided purchase", async () => {
+      const row = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+
+      const updated = await service.update(USER_A, row.id, input({ status: "avoided" }), NOW);
+
+      expect(updated.remindAt).toBeNull();
+    });
+
+    it("lists only the postponed purchases whose pause is over, oldest first", async () => {
+      const first = await service.create(USER_A, input({ note: "primera", status: "postponed", remindInMinutes: 10 }), NOW);
+      await service.create(USER_A, input({ note: "luego", status: "postponed", remindInMinutes: 1440 }), NOW);
+      await service.create(USER_A, input({ note: "evitada", status: "avoided" }), NOW);
+      await service.create(USER_A, input({ note: "sin pausa", status: "postponed" }), NOW);
+      const after20Min = new Date(NOW.getTime() + 20 * MINUTE);
+
+      expect(await service.listDue(USER_A, NOW)).toHaveLength(0);
+      const due = await service.listDue(USER_A, after20Min);
+
+      expect(due.map((d) => d.id)).toEqual([first.id]);
+      expect(due[0]).toMatchObject({ note: "primera", status: "postponed" });
+    });
+
+    it("lists at most three, the oldest ones", async () => {
+      for (let i = 0; i < 5; i++) {
+        await service.create(
+          USER_A,
+          input({ note: `n${i}`, status: "postponed", remindInMinutes: 10 }),
+          new Date(NOW.getTime() + i * MINUTE),
+        );
+      }
+
+      const due = await service.listDue(USER_A, new Date(NOW.getTime() + 1000 * MINUTE));
+
+      expect(due.map((d) => d.note)).toEqual(["n0", "n1", "n2"]);
+    });
+
+    it("only lists the user's own reminders", async () => {
+      await service.create(USER_B, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+
+      expect(await service.listDue(USER_A, new Date(NOW.getTime() + 60 * MINUTE))).toHaveLength(0);
+    });
+
+    it("dismissing stops the reminder but keeps the purchase postponed", async () => {
+      const row = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+
+      const dismissed = await service.dismissReminder(USER_A, row.id);
+
+      expect(dismissed).toMatchObject({ remindAt: null, status: "postponed" });
+      expect(await service.listDue(USER_A, new Date(NOW.getTime() + 60 * MINUTE))).toHaveLength(0);
+    });
+
+    it("cannot dismiss an avoided purchase or another user's", async () => {
+      const avoided = await service.create(USER_A, input({ status: "avoided" }), NOW);
+      const mine = await service.create(USER_A, input({ status: "postponed", remindInMinutes: 10 }), NOW);
+
+      await expectAppError(service.dismissReminder(USER_A, avoided.id), "NOT_FOUND");
+      await expectAppError(service.dismissReminder(USER_B, mine.id), "NOT_FOUND");
+    });
+  });
 });

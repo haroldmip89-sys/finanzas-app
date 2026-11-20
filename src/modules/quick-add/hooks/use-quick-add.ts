@@ -2,11 +2,22 @@
 
 import { createContext, useContext, useState } from "react";
 
-export type QuickAddKind = "expense" | "income" | "transfer" | "calibrate" | "pay-card";
+export type QuickAddKind =
+  | "expense"
+  | "income"
+  | "transfer"
+  | "calibrate"
+  | "pay-card"
+  | "evaluate";
+
+/** Amount and category to fill in the expense form (from "Evaluar una compra"). */
+export type ExpensePrefill = { amountCents: number; categoryId: string | null };
 
 export type QuickAddOptions = {
   /** Account the dialog is about (used by "calibrate"). */
   accountId?: string;
+  /** Fills the expense form when kind is "expense". */
+  prefill?: ExpensePrefill;
 };
 
 export type QuickAddApi = {
@@ -17,7 +28,7 @@ export type QuickAddApi = {
 
 export const QuickAddContext = createContext<QuickAddApi | null>(null);
 
-type OpenState = { kind: QuickAddKind; accountId?: string };
+type OpenState = { kind: QuickAddKind; accountId?: string; prefill?: ExpensePrefill };
 
 /** State of the quick-add dialogs: at most one is open at a time. */
 export function useQuickAddState() {
@@ -26,8 +37,9 @@ export function useQuickAddState() {
   return {
     kind: state?.kind ?? null,
     accountId: state?.accountId,
+    prefill: state?.prefill,
     open: (kind: QuickAddKind, options?: QuickAddOptions) =>
-      setState({ kind, accountId: options?.accountId }),
+      setState({ kind, accountId: options?.accountId, prefill: options?.prefill }),
     close: () => setState(null),
   };
 }

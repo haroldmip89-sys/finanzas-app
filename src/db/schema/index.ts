@@ -5,3 +5,4 @@ export { budgets } from "./budgets.table";
 export { categories } from "./categories.table";
 export { transactions } from "./transactions.table";
 export { transfers } from "./transfers.table";
+export { userSettings } from "./user-settings.table";

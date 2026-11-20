@@ -21,6 +21,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet } from "lucide-react";
 
+import type { ExpensePrefill } from "@/modules/quick-add/hooks/use-quick-add";
+import { LargePurchaseHint } from "@/modules/mindful-purchase/components/large-purchase-hint";
+
 import { useTransactionForm } from "../hooks/use-transaction-form";
 import { CategoryChips } from "./category-chips";
 import type { TransactionListItem, TransactionType } from "../types/transaction.types";
@@ -28,11 +31,12 @@ import type { TransactionListItem, TransactionType } from "../types/transaction.
 type TransactionFormProps = {
   transaction?: TransactionListItem;
   defaultType: TransactionType;
+  prefill?: ExpensePrefill;
   onClose: () => void;
 };
 
-function TransactionForm({ transaction, defaultType, onClose }: TransactionFormProps) {
-  const t = useTransactionForm({ transaction, defaultType, onSuccess: onClose });
+function TransactionForm({ transaction, defaultType, prefill, onClose }: TransactionFormProps) {
+  const t = useTransactionForm({ transaction, defaultType, prefill, onSuccess: onClose });
   const { errors } = t.form.formState;
 
   if (t.hasNoAccounts) {
@@ -92,6 +96,15 @@ function TransactionForm({ transaction, defaultType, onClose }: TransactionFormP
           )}
         />
       </FormField>
+
+      {!t.isEditing && t.type === "expense" && (
+        <LargePurchaseHint
+          amount={t.form.watch("amount")}
+          categoryId={t.form.watch("categoryId")}
+          note={t.form.watch("note")}
+          onDone={onClose}
+        />
+      )}
 
       <FormField label="Fecha" htmlFor="tx-date" error={errors.date?.message}>
         <Input
@@ -186,6 +199,7 @@ type TransactionFormDialogProps = {
   transaction?: TransactionListItem;
   /** Type preselected when creating (default: expense). */
   defaultType?: TransactionType;
+  prefill?: ExpensePrefill;
   onClose: () => void;
 };
 
@@ -193,13 +207,19 @@ export function TransactionFormDialog({
   open,
   transaction,
   defaultType = "expense",
+  prefill,
   onClose,
 }: TransactionFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent sheet>
         {/* Mounted only while open, so the form always starts from fresh defaults. */}
-        <TransactionForm transaction={transaction} defaultType={defaultType} onClose={onClose} />
+        <TransactionForm
+          transaction={transaction}
+          defaultType={defaultType}
+          prefill={prefill}
+          onClose={onClose}
+        />
       </DialogContent>
     </Dialog>
   );
